@@ -156,7 +156,7 @@ plt.show()
 
 # animation of the exact solution
 fig = plt.figure()
-ax = plt.axes(xlim=(-10, 10), ylim=(-2, 4))
+ax = plt.axes(xlim=(-10, 10), ylim=(-2, 3))
 line, = ax.plot([], [], lw=2)
 
 def init():
