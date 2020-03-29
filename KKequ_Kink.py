@@ -51,9 +51,9 @@ nonlin = numpy.zeros((Nx), dtype=float)
 nonlinhat = numpy.zeros((Nx), dtype=complex)
 
 t = 0.0
-u = -numpy.tanh(xx-c*t+5) + numpy.tanh(xx+c*t-5) + 1  #numpy.tanh(xx-c*t) #numpy.sqrt(2) / (numpy.cosh((xx - c * t) / numpy.sqrt(1.0 - c ** 2)))
-uexact = -numpy.tanh(xx-c*t+5) + numpy.tanh(xx+c*t-5) + 1  #numpy.tanh(xx-c*t)#numpy.sqrt(2) / (numpy.cosh((xx - c * t) / numpy.sqrt(1.0 - c ** 2)))
-uold = -numpy.tanh(xx-c*(t-dt)+5) + numpy.tanh(xx+c*(t-dt)-5) + 1  #numpy.tanh(xx-c*(t-dt))#numpy.sqrt(2) / (numpy.cosh((xx + c * dt) / numpy.sqrt(1.0 - c ** 2)))
+u = numpy.tanh(xx-c*t)# -numpy.tanh(xx-c*t+5) + numpy.tanh(xx+c*t-5) + 1
+uexact = numpy.tanh(xx-c*t)#-numpy.tanh(xx-c*t+5) + numpy.tanh(xx+c*t-5) + 1
+uold = numpy.tanh(xx-c*(t-dt))#-numpy.tanh(xx-c*(t-dt)+5) + numpy.tanh(xx+c*(t-dt)-5) + 1
 v = numpy.fft.fftn(u)
 vold = numpy.fft.fftn(uold)
 
@@ -100,6 +100,9 @@ plotnum = 0
 ntt = 0
 #
 us = [u]
+
+uerror = [abs(u-uexact)]
+
 for nt in xrange(numplots - 1):
     for n in xrange(plotgap):
         nonlin = u ** 3
@@ -113,11 +116,11 @@ for nt in xrange(numplots - 1):
         uold = u
         u = unew
     plotnum += 1
-    uexact = -numpy.tanh(xx-c*t+5) + numpy.tanh(xx+c*t-5) +1 #numpy.sqrt(2) / (numpy.cosh((xx - c * t) / numpy.sqrt(1.0 - c ** 2)))
+    uexact = numpy.tanh(xx-c*t)# -numpy.tanh(xx-c*t+5) + numpy.tanh(xx+c*t-5) +1
     ax = fig.add_subplot(211)
     plt.cla()
     ax.plot(xx, u, 'b-', label='$\phi$')
-    ax.plot(xx, uexact, 'r-',label='$\phi_{exact}$')
+    ax.plot(xx, uexact, 'r-', label='$\phi_{exact}$')
     plt.xlim(-10, 10)
     plt.ylim(-1.5, 3.0)
     plt.title('time t=' + str(t))
@@ -134,6 +137,7 @@ for nt in xrange(numplots - 1):
     plt.draw()
     #plt.savefig(str(name[ntt]))############## for png saving
     us.extend([u])
+    uerror.extend([abs(u - uexact)])
     ntt += 1
 
     vx = 0.5 * kxm * (v + vold)
@@ -155,6 +159,7 @@ plt.ioff()
 plt.show()
 
 # animation of the exact solution
+"""
 fig = plt.figure()
 ax = plt.axes(xlim=(-10, 10), ylim=(-2, 3))
 line, = ax.plot([], [], lw=2)
@@ -173,28 +178,38 @@ anim = animation.FuncAnimation(fig, animate, init_func=init,
                                frames=200, interval=100, blit=True)
 
 plt.show()
-
+"""
 
 #animation of the simulated solution
-"""
+#"""
 tme = 0
 
-fig, ax = plt.subplots()
-line, = ax.plot(xx, us[0], 'r-')
-ax.set_ylim(-2, 3)
-ax.set_xlim(-10, 10)
-
+fig = plt.figure()
+ax1 = fig.add_subplot(2, 1, 1)
+plt.ylabel('$\phi_{exact}$')
+ax2 = fig.add_subplot(2, 1, 2)
+line, = ax1.plot(xx, us[0], 'r-')
+line2, = ax2.plot(xx, uerror[0], 'b-')
+ax1.set_ylim(-2, 3)
+ax1.set_xlim(-10, 10)
+ax2.set_ylim(0, 1)
+ax2.set_xlim(-10, 10)
+plt.xlabel('x')
+plt.ylabel('$|\phi-phi_{exact}|$')
+plt.legend()
 
 def update(i):
     new_data = us[i:i+1]
     line.set_ydata(new_data)
-    return line,
+    new_data2 = uerror[i:i+1]
+    line2.set_ydata(new_data2)
+    return line, line2,
 
 
-ani = animation.FuncAnimation(fig, update, frames=numplots, interval=100)
+ani = animation.FuncAnimation(fig, update, frames=numplots, interval=50)
 plt.show()
 ani.save('Kink_annihilation.gif', writer='D_M')
-"""
+#"""
 
 
 
