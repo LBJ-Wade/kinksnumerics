@@ -158,30 +158,36 @@ for nt in xrange(numplots - 1):
 plt.ioff()
 plt.show()
 
-# animation of the exact solution
-"""
+
+#animation of live quantities, energy and energy split
 fig = plt.figure()
-ax = plt.axes(xlim=(-10, 10), ylim=(-2, 3))
-line, = ax.plot([], [], lw=2)
+ax1 = fig.add_subplot(2, 1, 1)
+ax2 = fig.add_subplot(2, 1, 2)
 
-def init():
-    line.set_data([], [])
-    return line,
+ax1.set_ylabel('$E_{tot}$')
 
-def animate(i):
-    x = numpy.linspace(-10, 10, 1000)
-    y = -numpy.tanh(x-c*i+5) + numpy.tanh(x+c*i-5) + 1
-    line.set_data(x, y)
-    return line,
+ax2.set_xlabel('t')
 
-anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=200, interval=100, blit=True)
+lines = []
+for i in range(len(tdata)):
+    line1,  = ax1.plot(tdata[:i], En[:i], color='black',)
+    line2,  = ax2.plot(tdata[:i], EnPot[:i] + EnStr[:i], color='red', label='$E_{Pot}$')
+    line2a, = ax2.plot(tdata[:i], EnKin[:i], color='black', label='$E_{Kin}$')
+    lines.append([line1, line2, line2a])
 
+
+# Build the animation using ArtistAnimation function
+
+ani = animation.ArtistAnimation(fig, lines, interval=50, blit=True)
 plt.show()
-"""
-
-#animation of the simulated solution
+ani.save('Single_Kink_energies.gif', writer='D_M')
 #"""
+
+
+
+
+#animation of the simulated solution and error
+"""
 tme = 0
 
 fig = plt.figure()
@@ -208,11 +214,48 @@ def update(i):
 
 ani = animation.FuncAnimation(fig, update, frames=numplots, interval=50)
 plt.show()
-ani.save('Kink_annihilation.gif', writer='D_M')
-#"""
+#ani.save('Kink_annihilation.gif', writer='D_M')
+"""
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+# animation of the exact solution #old
+"""
+fig = plt.figure()
+ax = plt.axes(xlim=(-10, 10), ylim=(-2, 3))
+line, = ax.plot([], [], lw=2)
+
+def init():
+    line.set_data([], [])
+    return line,
+
+def animate(i):
+    x = numpy.linspace(-10, 10, 1000)
+    y = -numpy.tanh(x-c*i+5) + numpy.tanh(x+c*i-5) + 1
+    line.set_data(x, y)
+    return line,
+
+anim = animation.FuncAnimation(fig, animate, init_func=init,
+                               frames=200, interval=100, blit=True)
+
+plt.show()
+"""
+
+
+#old stuff
 """
 plt.figure()
 plt.plot(tdata, En, 'r+', tdata, EnKin, 'b:', tdata, EnPot, 'g-.', tdata, EnStr, 'y--')
