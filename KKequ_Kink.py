@@ -165,12 +165,12 @@ ax1 = fig.add_subplot(2, 1, 1)
 ax2 = fig.add_subplot(2, 1, 2)
 
 ax1.set_ylabel('$E_{tot}$')
-
 ax2.set_xlabel('t')
+ax2.set_ylabel('$E_{Kin}\,\,\,\,\,E_{Pot}$')
 
 lines = []
 for i in range(len(tdata)):
-    line1,  = ax1.plot(tdata[:i], En[:i], color='black',)
+    line1,  = ax1.plot(tdata[:i], En[:i], color='black')
     line2,  = ax2.plot(tdata[:i], EnPot[:i] + EnStr[:i], color='red', label='$E_{Pot}$')
     line2a, = ax2.plot(tdata[:i], EnKin[:i], color='black', label='$E_{Kin}$')
     lines.append([line1, line2, line2a])
