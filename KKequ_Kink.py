@@ -2,18 +2,19 @@ import math
 import numpy
 import matplotlib.pyplot as plt
 from matplotlib import animation
+import scipy.integrate as integrate
 import time
 
 plt.ion()
 
 # Grid
 Lx = 64.0  # Period 2*pi*Lx
-Nx = 4096  # Number of harmonics
-Nt = 3000  # Number of time slices
-tmax = 50.0  # Maximum time
-c = 0.2  # Wave speed
+Nx = 8192  # Number of harmonics
+Nt = 7500  # Number of time slices
+tmax = 100.0  # Maximum time
+c = 0.1  # Wave speed
 dt = tmax / Nt  # time step
-plotgap = 10  # time steps between plots
+plotgap = 25  # time steps between plots
 Es = 1.0  # focusing (+1) or defocusing (-1) parameter
 numplots = Nt / plotgap  # number of plots to make
 
@@ -79,6 +80,7 @@ plt.show()
 # initial energy
 vx = 0.5 * kxm * (v + vold)
 ux = numpy.real(numpy.fft.ifftn(vx))
+#ux = 1/numpy.cosh(xx - c*t)**2
 Kineticenergy = 0.5 * ((u - uold) / dt) ** 2
 Strainenergy = 0.5 * (ux) ** 2
 Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)#0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
@@ -92,6 +94,17 @@ En[0] = EnStr[0] + EnPot[0] + EnKin[0]
 EnO = En[0]
 tdata[0] = t
 plotnum = 0
+#analytical
+"""
+EnKinanafft = [numpy.fft.fftn(0.5*(-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2)[0]]
+EnKinana = [integrate.quad(lambda z: 0.5 * (-c * 1 / (numpy.cosh(c * t - z)) ** 2) ** 2, -numpy.inf, numpy.inf)[0]]
+EnStrana = [integrate.quad(lambda z: 0.5 * ((numpy.cosh(-c * t + z)) ** -2) ** 2, -numpy.inf, numpy.inf)[0]]
+EnPotana = [integrate.quad(lambda z: 0.5 * ((numpy.tanh(z - c * t)) ** 4 - 2 * (numpy.tanh(z - c * t)) ** 2 + 1), -numpy.inf, numpy.inf)[0]]
+Enana = [EnStrana[0] + EnPotana[0] + EnKinana[0]]
+"""
+
+
+
 # plot each plot in a png
 #name = ["0.png"]
 #for i in range(numplots):
@@ -100,7 +113,7 @@ plotnum = 0
 ntt = 0
 #
 us = [u]
-
+uex = [uexact]
 uerror = [abs(u-uexact)]
 
 for nt in xrange(numplots - 1):
@@ -137,14 +150,25 @@ for nt in xrange(numplots - 1):
     plt.draw()
     #plt.savefig(str(name[ntt]))############## for png saving
     us.extend([u])
+    uex.extend([uexact])
     uerror.extend([abs(u - uexact)])
     ntt += 1
 
     vx = 0.5 * kxm * (v + vold)
     ux = numpy.real(numpy.fft.ifftn(vx))
+    #ux = 1 / numpy.cosh(xx - c * t) ** 2
     Kineticenergy = 0.5 * ((u - uold) / dt) ** 2
     Strainenergy = 0.5 * (ux) ** 2
     Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)#0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
+    #analytical
+    """
+    EnKinanafft.extend([ numpy.fft.fftn(0.5*(-c * 1/(numpy.cosh(c * t - xx))**2)**2)[0]])
+    EnKinana.extend([integrate.quad(lambda x: 0.5 * (-c * 1/(numpy.cosh(c * t - x))**2)**2, -numpy.inf, numpy.inf)[0]])
+    EnStrana.extend([integrate.quad(lambda x: 0.5 * (1/(numpy.cosh(-c * t + x))**2)**2, -numpy.inf, numpy.inf)[0]])
+    EnPotana.extend([integrate.quad(lambda x: 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -numpy.inf, numpy.inf)[0]])
+    Enana.extend([integrate.quad(lambda x: 0.5 * (-c * 1/(numpy.cosh(c * t - x))**2)**2 + 0.5 * (1/(numpy.cosh(-c * t + x))**2)**2 + 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -numpy.inf, numpy.inf)[0]])
+    """
+
     Kineticenergy = numpy.fft.fftn(Kineticenergy)
     Strainenergy = numpy.fft.fftn(Strainenergy)
     Potentialenergy = numpy.fft.fftn(Potentialenergy)
@@ -158,21 +182,23 @@ for nt in xrange(numplots - 1):
 plt.ioff()
 plt.show()
 
-
 #animation of live quantities, energy and energy split
+"""
 fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)
 ax2 = fig.add_subplot(2, 1, 2)
 
 ax1.set_ylabel('$E_{tot}$')
+#ax1.set_ylim(1, 2)
 ax2.set_xlabel('t')
 ax2.set_ylabel('$E_{Kin}\,\,\,\,\,E_{Pot}$')
 
 lines = []
 for i in range(len(tdata)):
-    line1,  = ax1.plot(tdata[:i], En[:i], color='black')
-    line2,  = ax2.plot(tdata[:i], EnPot[:i] + EnStr[:i], color='red', label='$E_{Pot}$')
-    line2a, = ax2.plot(tdata[:i], EnKin[:i], color='black', label='$E_{Kin}$')
+    line1,  = ax1.plot(tdata[:i], EnKin[:i], color='black')
+    line1a, = ax1.plot(tdata[:i], EnKinanafft[:i], color='red')
+    line2,  = ax2.plot(tdata[:i], EnPot[:i] + EnStr[:i], color='black', label='$E_{Pot}$')
+    line2a, = ax2.plot(tdata[:i], EnKin[:i], color='blue', label='$E_{Kin}$')
     lines.append([line1, line2, line2a])
 
 
@@ -180,42 +206,45 @@ for i in range(len(tdata)):
 
 ani = animation.ArtistAnimation(fig, lines, interval=50, blit=True)
 plt.show()
-ani.save('Single_Kink_energies.gif', writer='D_M')
-#"""
+#ani.save('Single_Kink_energies_plusana.gif', writer='D_M')
+"""
 
 
 
 
 #animation of the simulated solution and error
-"""
+#"""
 tme = 0
 
 fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)
-plt.ylabel('$\phi_{exact}$')
+plt.ylabel('$\phi_{simulated}$')
 ax2 = fig.add_subplot(2, 1, 2)
-line, = ax1.plot(xx, us[0], 'r-')
+line1, = ax1.plot(xx, us[0], 'r-')
+line1a, = ax1.plot(xx, uex[0], 'b-')
 line2, = ax2.plot(xx, uerror[0], 'b-')
 ax1.set_ylim(-2, 3)
 ax1.set_xlim(-10, 10)
-ax2.set_ylim(0, 1)
+ax2.set_ylim(0, 0.2)
 ax2.set_xlim(-10, 10)
 plt.xlabel('x')
-plt.ylabel('$|\phi-phi_{exact}|$')
+plt.ylabel('$|\phi_{simulated}-\phi_{exact}|$')
 plt.legend()
 
 def update(i):
-    new_data = us[i:i+1]
-    line.set_ydata(new_data)
+    new_data1 = us[i:i+1]
+    line1.set_ydata(new_data1)
+    new_data1a = uex[i:i+1]
+    line1a.set_ydata(new_data1a)
     new_data2 = uerror[i:i+1]
     line2.set_ydata(new_data2)
-    return line, line2,
+    return line1, line2,
 
 
-ani = animation.FuncAnimation(fig, update, frames=numplots, interval=50)
+ani = animation.FuncAnimation(fig, update, frames=numplots, interval=75)
 plt.show()
-#ani.save('Kink_annihilation.gif', writer='D_M')
-"""
+ani.save('one_kink_moving.gif', writer='D_M')
+#"""
 
 
 
