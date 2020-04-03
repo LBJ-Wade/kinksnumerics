@@ -4,18 +4,22 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 import scipy.integrate as integrate
 import time
+def truncate(n, decimals=0):
+    multiplier = 10 ** decimals
+    return int(n * multiplier) / multiplier
+
+
 
 plt.ion()
 
 # Grid
-Lx = 64.0  # Period 2*pi*Lx
+Lx = 128.0  # Period 2*pi*Lx
 Nx = 8192  # Number of harmonics
-Nt = 7500  # Number of time slices
+Nt = 10000  # Number of time slices
 tmax = 100.0  # Maximum time
-c = 0.1  # Wave speed
+c = 0.1#0.1  # Wave speed
 dt = tmax / Nt  # time step
-plotgap = 25  # time steps between plots
-Es = 1.0  # focusing (+1) or defocusing (-1) parameter
+plotgap = 50  # time steps between plots
 numplots = Nt / plotgap  # number of plots to make
 
 x = [i * 2.0 * math.pi * (Lx / Nx) for i in xrange(-Nx / 2, 1 + Nx / 2)]
@@ -29,9 +33,11 @@ for i in xrange(Nx):
     kxm[i] = k_x[i]
     xx[i] = x[i]
 
+
 # allocate arrays
 unew = numpy.zeros((Nx), dtype=float)
 u = numpy.zeros((Nx), dtype=float)
+ut = numpy.zeros((Nx), dtype=float)
 uexact = numpy.zeros((Nx), dtype=float)
 uold = numpy.zeros((Nx), dtype=float)
 vnew = numpy.zeros((Nx), dtype=complex)
@@ -74,7 +80,7 @@ plt.ylim(-1.5, 3.0)
 plt.xlabel('x')
 plt.ylabel('error')
 #plt.ioff()
-plt.show()
+#plt.show()
 
 #"""
 # initial energy
@@ -84,26 +90,42 @@ ux = numpy.real(numpy.fft.ifftn(vx))
 Kineticenergy = 0.5 * ((u - uold) / dt) ** 2
 Strainenergy = 0.5 * (ux) ** 2
 Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)#0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
-Kineticenergy = numpy.fft.fftn(Kineticenergy)
-Strainenergy = numpy.fft.fftn(Strainenergy)
-Potentialenergy = numpy.fft.fftn(Potentialenergy)
-EnKin[0] = numpy.real(Kineticenergy[0])
-EnPot[0] = numpy.real(Potentialenergy[0])
-EnStr[0] = numpy.real(Strainenergy[0])
+#Kineticenergy = numpy.fft.fftn(Kineticenergy)
+#Strainenergy = numpy.fft.fftn(Strainenergy)
+#Potentialenergy = numpy.fft.fftn(Potentialenergy)
+Ekinsum = 0
+Epotsum = 0
+Estrsum = 0
+for i in range(len(xx)):
+    if (xx[i] > -20) & (xx[i] < 20):
+        Ekinsum = Ekinsum + Kineticenergy[i]
+        Epotsum = Epotsum + Potentialenergy[i]
+        Estrsum = Estrsum + Strainenergy[i]
+
+EnKin[0] = Ekinsum
+EnPot[0] = Epotsum
+EnStr[0] = Estrsum
 En[0] = EnStr[0] + EnPot[0] + EnKin[0]
 EnO = En[0]
 tdata[0] = t
 plotnum = 0
 #analytical
-"""
-EnKinanafft = [numpy.fft.fftn(0.5*(-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2)[0]]
 EnKinana = [integrate.quad(lambda z: 0.5 * (-c * 1 / (numpy.cosh(c * t - z)) ** 2) ** 2, -numpy.inf, numpy.inf)[0]]
 EnStrana = [integrate.quad(lambda z: 0.5 * ((numpy.cosh(-c * t + z)) ** -2) ** 2, -numpy.inf, numpy.inf)[0]]
 EnPotana = [integrate.quad(lambda z: 0.5 * ((numpy.tanh(z - c * t)) ** 4 - 2 * (numpy.tanh(z - c * t)) ** 2 + 1), -numpy.inf, numpy.inf)[0]]
 Enana = [EnStrana[0] + EnPotana[0] + EnKinana[0]]
-"""
 
-
+"""fig = plt.figure()
+ax1 = fig.add_subplot(2, 1, 1)
+ax2 = fig.add_subplot(2, 1, 2)
+ax1.plot(xx, Potentialenergy, 'b-', label='$\phi$')
+ax1.plot(xx, 0.5 * ((numpy.tanh(xx - c * t)) ** 4 - 2 * (numpy.tanh(xx - c * t)) ** 2 + 1), 'r-', label='$\phi_e$')
+ax1.set_xlim(-10, 10)
+ax2.plot(xx, Kineticenergy, 'b-', label='$\phi$')
+ax2.plot(xx, 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2, 'r-', label='$\phi_e$')
+ax2.set_xlim(-10, 10)
+#plt.ioff()
+#plt.show()"""
 
 # plot each plot in a png
 #name = ["0.png"]
@@ -134,7 +156,7 @@ for nt in xrange(numplots - 1):
     plt.cla()
     ax.plot(xx, u, 'b-', label='$\phi$')
     ax.plot(xx, uexact, 'r-', label='$\phi_{exact}$')
-    plt.xlim(-10, 10)
+    #plt.xlim(-10, 10)
     plt.ylim(-1.5, 3.0)
     plt.title('time t=' + str(t))
     plt.xlabel('x')
@@ -156,27 +178,41 @@ for nt in xrange(numplots - 1):
 
     vx = 0.5 * kxm * (v + vold)
     ux = numpy.real(numpy.fft.ifftn(vx))
-    #ux = 1 / numpy.cosh(xx - c * t) ** 2
-    Kineticenergy = 0.5 * ((u - uold) / dt) ** 2
+    Kineticenergy = 0.5 * ((u-uold) / dt) ** 2
     Strainenergy = 0.5 * (ux) ** 2
     Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)#0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
     #analytical
-    """
-    EnKinanafft.extend([ numpy.fft.fftn(0.5*(-c * 1/(numpy.cosh(c * t - xx))**2)**2)[0]])
     EnKinana.extend([integrate.quad(lambda x: 0.5 * (-c * 1/(numpy.cosh(c * t - x))**2)**2, -numpy.inf, numpy.inf)[0]])
     EnStrana.extend([integrate.quad(lambda x: 0.5 * (1/(numpy.cosh(-c * t + x))**2)**2, -numpy.inf, numpy.inf)[0]])
-    EnPotana.extend([integrate.quad(lambda x: 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -numpy.inf, numpy.inf)[0]])
+    EnPotana.extend([integrate.quad(lambda x: 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -20, 20)[0]])
     Enana.extend([integrate.quad(lambda x: 0.5 * (-c * 1/(numpy.cosh(c * t - x))**2)**2 + 0.5 * (1/(numpy.cosh(-c * t + x))**2)**2 + 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -numpy.inf, numpy.inf)[0]])
-    """
 
-    Kineticenergy = numpy.fft.fftn(Kineticenergy)
-    Strainenergy = numpy.fft.fftn(Strainenergy)
-    Potentialenergy = numpy.fft.fftn(Potentialenergy)
-    EnKin[plotnum] = numpy.real(Kineticenergy[0])
-    EnPot[plotnum] = numpy.real(Potentialenergy[0])
-    EnStr[plotnum] = numpy.real(Strainenergy[0])
+    """ax = fig.add_subplot(212)
+    plt.cla()
+    ax.plot(xx, Potentialenergy, 'b-')  # ax.plot(xx, uexact, 'b-')
+    ax.plot(xx, 0.5*((numpy.tanh(xx-c*t))**4-2*(numpy.tanh(xx-c*t))**2+1), 'r-')
+    plt.xlim(-10, 10)
+    plt.ylim(0, 0.05)
+    plt.xlabel('x')
+    plt.ylabel('Epot')
+    plt.draw()"""
+
+    #Kineticenergy = numpy.fft.fftn(Kineticenergy)
+    #Strainenergy = numpy.fft.fftn(Strainenergy)
+    #Potentialenergy = numpy.fft.fftn(Potentialenergy)
+    Ekinsum = 0
+    Epotsum = 0
+    Estrsum = 0
+    for i in range(len(xx)):
+        if (xx[i] > -20) & (xx[i] < 20):
+            Ekinsum = Ekinsum + Kineticenergy[i]
+            Epotsum = Epotsum + Potentialenergy[i]
+            Estrsum = Estrsum + Strainenergy[i]
+    EnKin[plotnum] = Ekinsum #numpy.real(Kineticenergy[0])
+    EnPot[plotnum] = Epotsum #numpy.real(Potentialenergy[0])
+    EnStr[plotnum] = Estrsum #numpy.real(Strainenergy[0])
     En[plotnum] = EnStr[plotnum] + EnPot[plotnum] + EnKin[plotnum]
-    Enchange[plotnum - 1] = numpy.log(abs(1 - En[plotnum] / EnO))
+    #Enchange[plotnum - 1] = numpy.log(abs(1 - En[plotnum] / EnO))
     tdata[plotnum] = t
 
 plt.ioff()
@@ -189,16 +225,15 @@ ax1 = fig.add_subplot(2, 1, 1)
 ax2 = fig.add_subplot(2, 1, 2)
 
 ax1.set_ylabel('$E_{tot}$')
-#ax1.set_ylim(1, 2)
+#ax1.set_ylim(500, 600)
 ax2.set_xlabel('t')
 ax2.set_ylabel('$E_{Kin}\,\,\,\,\,E_{Pot}$')
-
+#ax2.set_ylim(500, 750)
 lines = []
 for i in range(len(tdata)):
-    line1,  = ax1.plot(tdata[:i], EnKin[:i], color='black')
-    line1a, = ax1.plot(tdata[:i], EnKinanafft[:i], color='red')
-    line2,  = ax2.plot(tdata[:i], EnPot[:i] + EnStr[:i], color='black', label='$E_{Pot}$')
-    line2a, = ax2.plot(tdata[:i], EnKin[:i], color='blue', label='$E_{Kin}$')
+    line1,  = ax1.plot(tdata[:i], EnPot[:i], color='black')
+    line2,  = ax2.plot(tdata[:i], EnPot[:i], color='black', label='$E_{Pot}$')
+    line2a, = ax2.plot(tdata[:i], EnPotana[:i], color='blue', label='$E_{Kin}$')
     lines.append([line1, line2, line2a])
 
 
@@ -206,15 +241,13 @@ for i in range(len(tdata)):
 
 ani = animation.ArtistAnimation(fig, lines, interval=50, blit=True)
 plt.show()
-#ani.save('Single_Kink_energies_plusana.gif', writer='D_M')
+#ani.save('Single_Kink_energies_sim_and_analyt.gif', writer='D_M')
 """
 
 
 
 
 #animation of the simulated solution and error
-#"""
-tme = 0
 
 fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)
@@ -229,6 +262,7 @@ ax2.set_ylim(0, 0.2)
 ax2.set_xlim(-10, 10)
 plt.xlabel('x')
 plt.ylabel('$|\phi_{simulated}-\phi_{exact}|$')
+plt.hlines(0.05,-10,10,colors='black',linestyles='--')
 plt.legend()
 
 def update(i):
@@ -244,7 +278,7 @@ def update(i):
 ani = animation.FuncAnimation(fig, update, frames=numplots, interval=75)
 plt.show()
 ani.save('one_kink_moving.gif', writer='D_M')
-#"""
+
 
 
 
