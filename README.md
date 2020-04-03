@@ -15,10 +15,12 @@ notes about that but typing this into this readme seems a bit senceless.]
 I safed the numerically simulated function phi at a given time step in an array of functions and animated this array. 
 The result will be uploaded soon, I will also cut out some pictures for the report. 
 
-TODO:
-a) For a single kink solution, just show that the analytic solution of one *single* moving kink reproduces your numerical one.
+-> For a single kink solution, just show that the analytic solution of one *single* moving kink reproduces your numerical one.
+This worked quit well, although I had to chose a low speed to get an acceptable error between simulation and analytical solution
 
-b) Compute and display in "live" quantities like the total energy of the system and it's break-down between kinetic and potential, computed directly from the numerical solution. Compare against analytical.
+
+TODO:
+-> Compute and display in "live" quantities like the total energy of the system and it's break-down between kinetic and potential, computed directly from the numerical solution. Compare against analytical. (This turns out to be tricky, somehow the integrals over my enery density functions are very different to what to expect analytically. The Density functions themselfes are almost completly identical. I am investigating this further ...)
 
 c) For two-kink solutions: Let the numerical solution evolve from two *initially* static kink and anti-kink solution separated by a distance 2a. (Eq. 5.28). Compute the "effective classical" attractive force experienced by the two kinks (again numerically from Eq. 5.26) and compare it to the analytical approximation of Eq. 5.31.
 You can then evolve analytically the starting solution of Eq. 5.28 like if they were two point-like objects of mass m subject to the force computed above. Namely: simply changing `a` of Eq. 5.28 into `x(t)` where `x(t)` is then simply `x0 + v_0*t + 1/2 (F/m) t^2` (with `x0=+/-a` and `v_0 = 0` in the suggested case above). This is what I called the "analytical solution". Now of course at the point of contact I would expect the two to significantly differ, but during the initial approach, they should be similar!
