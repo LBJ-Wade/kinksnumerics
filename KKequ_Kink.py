@@ -120,7 +120,7 @@ Potentialenergyana = 0.5 * ((numpy.tanh(xx - c * t)) ** 4 - 2 * (numpy.tanh(xx -
 fKineticenergyana = [Kineticenergyana]
 fPotentialenergyana = [Potentialenergyana]
 fStrainenergyana = [Strainenergyana]
-fPotentialenergyerror = [abs(Potentialenergy-Potentialenergyana)]
+fPotentialenergyerror = [abs(Kineticenergy-Kineticenergyana)]
 #integrate over everything for analyticall
 EnKinana = [integrate.quad(lambda z: 0.5 * (-c * 1 / (numpy.cosh(c * t - z)) ** 2) ** 2, -numpy.inf, numpy.inf)[0]]
 EnStrana = [integrate.quad(lambda z: 0.5 * ((numpy.cosh(-c * t + z)) ** -2) ** 2, -numpy.inf, numpy.inf)[0]]
@@ -203,7 +203,7 @@ for nt in xrange(numplots - 1):
     fKineticenergyana.extend([Kineticenergyana])
     fPotentialenergyana.extend([Potentialenergyana])
     fStrainenergyana.extend([Strainenergyana])
-    fPotentialenergyerror.extend([abs(Potentialenergy - Potentialenergyana)])
+    fPotentialenergyerror.extend([abs(Kineticenergy - Kineticenergyana)])
 
     EnKinana.extend([integrate.quad(lambda x: 0.5 * (-c * 1/(numpy.cosh(c * t - x))**2)**2, -numpy.inf, numpy.inf)[0]])
     EnStrana.extend([integrate.quad(lambda x: 0.5 * (1/(numpy.cosh(-c * t + x))**2)**2, -numpy.inf, numpy.inf)[0]])
@@ -212,10 +212,10 @@ for nt in xrange(numplots - 1):
 
     ax = fig.add_subplot(212)
     plt.cla()
-    ax.plot(xx, Potentialenergy, 'b-')  # ax.plot(xx, uexact, 'b-')
-    ax.plot(xx, Potentialenergyana, 'r-')
+    ax.plot(xx, Kineticenergy, 'b-')  # ax.plot(xx, uexact, 'b-')
+    ax.plot(xx, Kineticenergyana, 'r-')
     plt.xlim(-10, 10)
-    #plt.ylim(0, 0.05)
+    plt.ylim(0, 0.02)
     plt.xlabel('x')
     plt.ylabel('Epot')
     plt.draw()
@@ -250,13 +250,13 @@ fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)
 ax2 = fig.add_subplot(2, 1, 2)
 
-ax1.set_ylabel('$\\rho_{Pot,simandana}$')
+ax1.set_ylabel('$\\rho_{Kin,simandana}$')
 ax1.set_xlim(-15, 15)
-ax1.set_ylim(0, 0.6)
+ax1.set_ylim(0, 0.006)
 ax2.set_xlabel('x')
-ax2.set_ylabel('$|\\rho_{Pot,simulated}-\\rho_{Pot,analytical}|$')
+ax2.set_ylabel('$|\\rho_{Kin,simulated}-\\rho_{Kin,analytical}|$')
 ax2.set_xlim(-15, 15)
-ax2.set_ylim(0, 0.04)
+ax2.set_ylim(0, 0.0007)
 """lines = []
 for i in range(len(tdata)):
     line1,  = ax1.plot(tdata[:i], EnPot[:i], color='black')
@@ -265,24 +265,24 @@ for i in range(len(tdata)):
     lines.append([line1, line2, line2a])
 
 """
-line1, = ax1.plot(xx, fPotentialenergy[0], 'r-')
-line1a, = ax1.plot(xx, fPotentialenergyana[0], 'b-')
-line2, = ax2.plot(xx, abs(fPotentialenergy[0]-fPotentialenergyana[0]), 'b-')
+line1, = ax1.plot(xx, fKineticenergy[0], 'r-')
+line1a, = ax1.plot(xx, fKineticenergyana[0], 'b-')
+line2, = ax2.plot(xx, abs(fKineticenergy[0]-fKineticenergyana[0]), 'b-')
 def update(i):
-    new_data1 = fPotentialenergy[i:i+1]
+    new_data1 = fKineticenergy[i:i+1]
     line1.set_ydata(new_data1)
-    new_data1a = fPotentialenergyana[i:i+1]
+    new_data1a = fKineticenergyana[i:i+1]
     line1a.set_ydata(new_data1a)
     new_data2 = fPotentialenergyerror[i:i+1]
     line2.set_ydata(new_data2)
-    return line1, line2, line1a,
+    return line1a, line1, line2,
 
 ani = animation.FuncAnimation(fig, update, frames=numplots, interval=75)
 plt.show()
 """ani = animation.ArtistAnimation(fig, lines, interval=50, blit=True)
 plt.show()
 """
-ani.save('energydensity_pot_sim_and_analyt.gif', writer='D_M')
+ani.save('energydensity_kin_sim_and_analyt.gif', writer='D_M')
 
 
 
