@@ -33,7 +33,7 @@ for i in xrange(Nx):
     kxm[i] = k_x[i]
     xx[i] = x[i]
 
-
+dx = abs(xx[4096]-xx[4097])
 # allocate arrays
 unew = numpy.zeros((Nx), dtype=float)
 u = numpy.zeros((Nx), dtype=float)
@@ -89,7 +89,7 @@ plt.ylabel('error')
 vx = 0.5 * kxm * (v + vold)
 ux = numpy.real(numpy.fft.ifftn(vx))
 Kineticenergy = 0.5 * ((u - uold) / dt) ** 2
-Strainenergy = (ux) ** 2
+Strainenergy = 0.5* (ux) ** 2
 Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)#0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
 fKineticenergy = [Kineticenergy]
 fPotentialenergy = [Potentialenergy]
@@ -99,23 +99,24 @@ Ekinsum = 0
 Epotsum = 0
 Estrsum = 0
 for i in range(len(xx)):
-    if (xx[i] > -20) & (xx[i] < 20):
-        Ekinsum = Ekinsum + Kineticenergy[i]
-        Epotsum = Epotsum + Potentialenergy[i]
-        Estrsum = Estrsum + Strainenergy[i]
+    if (xx[i] > -90) & (xx[i] < 90):
+        Ekinsum = Ekinsum + Kineticenergy[i]*dx
+        Epotsum = Epotsum + Potentialenergy[i]*dx
+        Estrsum = Estrsum + Strainenergy[i]*dx
 
 EnKin[0] = Ekinsum
 EnPot[0] = Epotsum
 EnStr[0] = Estrsum
 En[0] = EnStr[0] + EnPot[0] + EnKin[0]
-EnO = En[0]
+
+#EnO = En[0]
 tdata[0] = t
 plotnum = 0
 
 
 #analytical
 Kineticenergyana = 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2
-Strainenergyana = ((numpy.cosh(-c * t + xx)) ** -2) ** 2
+Strainenergyana = 0.5 * (1/(numpy.cosh(-c * t + xx))**2)**2
 Potentialenergyana = 0.5 * ((numpy.tanh(xx - c * t)) ** 4 - 2 * (numpy.tanh(xx - c * t)) ** 2 + 1)
 fKineticenergyana = [Kineticenergyana]
 fPotentialenergyana = [Potentialenergyana]
@@ -191,14 +192,14 @@ for nt in xrange(numplots - 1):
     vx = 0.5 * kxm * (v + vold)
     ux = numpy.real(numpy.fft.ifftn(vx))
     Kineticenergy = 0.5 * ((u-uold) / dt) ** 2
-    Strainenergy = (ux) ** 2
+    Strainenergy = 0.5 * (ux) ** 2
     Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)#0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
     fKineticenergy.extend([Kineticenergy])
     fPotentialenergy.extend([Potentialenergy])
     fStrainenergy.extend([Strainenergy])
     #analytical
     Kineticenergyana = 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2
-    Strainenergyana = ((numpy.cosh(-c * t + xx)) ** -2) ** 2
+    Strainenergyana = 0.5 * (1/(numpy.cosh(-c * t + xx))**2)**2
     Potentialenergyana = 0.5 * ((numpy.tanh(xx - c * t)) ** 4 - 2 * (numpy.tanh(xx - c * t)) ** 2 + 1)
     fKineticenergyana.extend([Kineticenergyana])
     fPotentialenergyana.extend([Potentialenergyana])
@@ -227,10 +228,10 @@ for nt in xrange(numplots - 1):
     Epotsum = 0
     Estrsum = 0
     for i in range(len(xx)):
-        if (xx[i] > -20) & (xx[i] < 20):
-            Ekinsum = Ekinsum + Kineticenergy[i]
-            Epotsum = Epotsum + Potentialenergy[i]
-            Estrsum = Estrsum + Strainenergy[i]
+        if (xx[i] > -15) & (xx[i] < 15):
+            Ekinsum = Ekinsum + Kineticenergy[i]*dx
+            Epotsum = Epotsum + Potentialenergy[i]*dx
+            Estrsum = Estrsum + Strainenergy[i]*dx
     EnKin[plotnum] = Ekinsum #numpy.real(Kineticenergy[0])
     EnPot[plotnum] = Epotsum #numpy.real(Potentialenergy[0])
     EnStr[plotnum] = Estrsum #numpy.real(Strainenergy[0])
@@ -250,21 +251,24 @@ fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)
 ax2 = fig.add_subplot(2, 1, 2)
 
-ax1.set_ylabel('$\\rho_{Str,simandana}$')
+ax1.set_ylabel('$\\rho_{Sim.\,and\,Analy.}$')
 ax1.set_xlim(-15, 15)
-ax1.set_ylim(0, 1.1)
-ax2.set_xlabel('x')
-ax2.set_ylabel('$|\\rho_{Str,simulated}-\\rho_{Str,analytical}|$')
+ax1.set_ylim(0, 0.6)
+ax2.set_xlabel('t')
+ax2.set_ylabel('$|\\rho_{Str,simulated}\,-\,\\rho_{Str,analytical}|$')
 ax2.set_xlim(-15, 15)
-ax2.set_ylim(0, 0.1)
+ax2.set_ylim(0, 0.04)
 """lines = []
 for i in range(len(tdata)):
-    line1,  = ax1.plot(tdata[:i], EnPot[:i], color='black')
-    line2,  = ax2.plot(tdata[:i], EnPot[:i], color='black', label='$E_{Pot}$')
-    line2a, = ax2.plot(tdata[:i], EnPotana[:i], color='blue', label='$E_{Kin}$')
-    lines.append([line1, line2, line2a])
-
+    line1,  = ax1.plot(tdata[:i], EnStr[:i], color='blue')
+    line1a,  = ax1.plot(tdata[:i], EnStrana[:i], color='red')
+    #line2,  = ax2.plot(tdata[:i], EnPot[:i], color='green', label='$E_{Kin,sim}$')
+    #line2a, = ax2.plot(tdata[:i], EnPotana[:i], color='blue', label='$E_{Kin,ana}$')
+    #line2b,  = ax2.plot(tdata[:i], EnPot[:i], color='black', label='$E_{Pot,sim}$')
+    #line2c, = ax2.plot(tdata[:i], EnPotana[:i], color='red', label='$E_{Pot,ana}$')
+    lines.append([line1, line1a, ])#line2, line2a, line2b, line2c])
 """
+
 line1, = ax1.plot(xx, fStrainenergy[0], 'r-')
 line1a, = ax1.plot(xx, fStrainenergyana[0], 'b-')
 line2, = ax2.plot(xx, fPotentialenergyerror[0], 'b-')
@@ -280,8 +284,8 @@ def update(i):
 ani = animation.FuncAnimation(fig, update, frames=numplots, interval=75)
 plt.show()
 """ani = animation.ArtistAnimation(fig, lines, interval=50, blit=True)
-plt.show()
-"""
+plt.show()"""
+
 ani.save('energydensity_strain_sim_and_analyt.gif', writer='D_M')
 
 
