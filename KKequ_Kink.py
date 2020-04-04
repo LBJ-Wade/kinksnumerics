@@ -208,7 +208,7 @@ for nt in xrange(numplots - 1):
 
     EnKinana.extend([integrate.quad(lambda x: 0.5 * (-c * 1/(numpy.cosh(c * t - x))**2)**2, -numpy.inf, numpy.inf)[0]])
     EnStrana.extend([integrate.quad(lambda x: 0.5 * (1/(numpy.cosh(-c * t + x))**2)**2, -numpy.inf, numpy.inf)[0]])
-    EnPotana.extend([integrate.quad(lambda x: 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -20, 20)[0]])
+    EnPotana.extend([integrate.quad(lambda x: 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -numpy.inf, numpy.inf)[0]])
     Enana.extend([integrate.quad(lambda x: 0.5 * (-c * 1/(numpy.cosh(c * t - x))**2)**2 + 0.5 * (1/(numpy.cosh(-c * t + x))**2)**2 + 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -numpy.inf, numpy.inf)[0]])
 
     ax = fig.add_subplot(212)
@@ -251,24 +251,26 @@ fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)
 ax2 = fig.add_subplot(2, 1, 2)
 
-ax1.set_ylabel('$\\rho_{Sim.\,and\,Analy.}$')
-ax1.set_xlim(-15, 15)
-ax1.set_ylim(0, 0.6)
+ax1.set_ylabel('$E_{Total}$')
+#ax1.set_xlim(-15, 15)
+ax1.set_ylim(1.339, 1.341)
 ax2.set_xlabel('t')
-ax2.set_ylabel('$|\\rho_{Str,simulated}\,-\,\\rho_{Str,analytical}|$')
-ax2.set_xlim(-15, 15)
-ax2.set_ylim(0, 0.04)
-"""lines = []
+ax2.set_ylabel('$E_{Kin}$')
+#ax2.set_xlim(-15, 15)
+ax2.set_ylim(0.006, 0.008)
+lines = []
 for i in range(len(tdata)):
-    line1,  = ax1.plot(tdata[:i], EnStr[:i], color='blue')
-    line1a,  = ax1.plot(tdata[:i], EnStrana[:i], color='red')
-    #line2,  = ax2.plot(tdata[:i], EnPot[:i], color='green', label='$E_{Kin,sim}$')
-    #line2a, = ax2.plot(tdata[:i], EnPotana[:i], color='blue', label='$E_{Kin,ana}$')
-    #line2b,  = ax2.plot(tdata[:i], EnPot[:i], color='black', label='$E_{Pot,sim}$')
-    #line2c, = ax2.plot(tdata[:i], EnPotana[:i], color='red', label='$E_{Pot,ana}$')
-    lines.append([line1, line1a, ])#line2, line2a, line2b, line2c])
-"""
+    line1,  = ax1.plot(tdata[:i], En[:i], color='blue')
+    line1a,  = ax1.plot(tdata[:i], Enana[:i], color='red')
+    line2,  = ax2.plot(tdata[:i], EnKin[:i], color='blue', label='$E_{Kin,sim}$')
+    line2a, = ax2.plot(tdata[:i], EnKinana[:i], color='black', label='$E_{Kin,ana}$')
+    #line2b,  = ax2.plot(tdata[:i], EnPot[:i], color='red', label='$E_{Pot,sim}$')
+    #line2c, = ax2.plot(tdata[:i], EnPotana[:i], color='black', label='$E_{Pot,ana}$')
+    #line2d,  = ax2.plot(tdata[:i], EnStr[:i], color='blue', label='$E_{Str,sim}$')
+    #line2e, = ax2.plot(tdata[:i], EnStrana[:i], color='green', label='$E_{Str,ana}$')
+    lines.append([line1, line1a, line2, line2a])
 
+"""
 line1, = ax1.plot(xx, fStrainenergy[0], 'r-')
 line1a, = ax1.plot(xx, fStrainenergyana[0], 'b-')
 line2, = ax2.plot(xx, fPotentialenergyerror[0], 'b-')
@@ -280,13 +282,13 @@ def update(i):
     new_data2 = fPotentialenergyerror[i:i+1]
     line2.set_ydata(new_data2)
     return line1a, line1, line2,
-
-ani = animation.FuncAnimation(fig, update, frames=numplots, interval=75)
-plt.show()
-"""ani = animation.ArtistAnimation(fig, lines, interval=50, blit=True)
+"""
+"""ani = animation.FuncAnimation(fig, update, frames=numplots, interval=75)
 plt.show()"""
+ani = animation.ArtistAnimation(fig, lines, interval=50, blit=True)
+plt.show()
 
-ani.save('energydensity_strain_sim_and_analyt.gif', writer='D_M')
+ani.save('totalenergy_and_split_kinetic.gif', writer='D_M')
 
 
 
