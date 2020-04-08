@@ -346,9 +346,9 @@ plt.show()
 #animation on the interaction energy between two kink
 
 fig = plt.figure()
-ax1 = fig.add_subplot(2, 1, 1)
+ax1 = fig.add_subplot(1, 1, 1)
 #ax2 = fig.add_subplot(2, 1, 2)
-ax1.set_ylabel('$F_{interaction}$')
+ax1.set_ylabel('$F_{interaction}(t=0...85)$')
 ax1.set_ylim(0, 0.01)
 lines = []
 for i in range(len(tdata)):
@@ -358,6 +358,7 @@ for i in range(len(tdata)):
 
 ani = animation.ArtistAnimation(fig, lines, interval=65, blit=True)
 plt.show()
+ani.save('interaction_force_two_kink.gif', writer='D_M')
 
 #animation of live quantities, energy and energy split
 """
