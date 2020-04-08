@@ -14,11 +14,12 @@ plt.ion()
 
 # Grid
 Lx = 128.0  # Period 2*pi*Lx
-Nx = 8192  # Number of harmonics
+Nx = 16384  # Number of harmonics
 Nt = 10000  # Number of time slices
-tmax = 100.0  # Maximum time
+tmax = 85.0  # Maximum time
 c = 0.0#0.1  # Wave speed
 a = 3 #two kink seperation
+b = 0 #Point between two kinks
 dt = tmax / Nt  # time step
 plotgap = 50  # time steps between plots
 numplots = Nt / plotgap  # number of plots to make
@@ -35,6 +36,7 @@ for i in xrange(Nx):
     xx[i] = x[i]
 
 dx = abs(xx[4096]-xx[4097])
+print(dx)
 # allocate arrays
 unew = numpy.zeros((Nx), dtype=float)
 u = numpy.zeros((Nx), dtype=float)
@@ -46,7 +48,29 @@ v = numpy.zeros((Nx), dtype=complex)
 vold = numpy.zeros((Nx), dtype=complex)
 ux = numpy.zeros((Nx), dtype=float)
 vx = numpy.zeros((Nx), dtype=complex)
+unew1 = numpy.zeros((Nx), dtype=float)
+u1 = numpy.zeros((Nx), dtype=float)
+ut1 = numpy.zeros((Nx), dtype=float)
+uexact1 = numpy.zeros((Nx), dtype=float)
+uold1 = numpy.zeros((Nx), dtype=float)
+vnew1 = numpy.zeros((Nx), dtype=complex)
+v1 = numpy.zeros((Nx), dtype=complex)
+vold1 = numpy.zeros((Nx), dtype=complex)
+ux1 = numpy.zeros((Nx), dtype=float)
+vx1 = numpy.zeros((Nx), dtype=complex)
+unew2 = numpy.zeros((Nx), dtype=float)
+u2 = numpy.zeros((Nx), dtype=float)
+ut2 = numpy.zeros((Nx), dtype=float)
+uexact2 = numpy.zeros((Nx), dtype=float)
+uold2 = numpy.zeros((Nx), dtype=float)
+vnew2 = numpy.zeros((Nx), dtype=complex)
+v2 = numpy.zeros((Nx), dtype=complex)
+vold2 = numpy.zeros((Nx), dtype=complex)
+ux2 = numpy.zeros((Nx), dtype=float)
+vx2 = numpy.zeros((Nx), dtype=complex)
 InteractionForce = numpy.zeros((Nx), dtype=complex)
+F = numpy.zeros((numplots), dtype=float)
+Fana = numpy.zeros((numplots), dtype=float)
 Kineticenergy = numpy.zeros((Nx), dtype=complex)
 Potentialenergy = numpy.zeros((Nx), dtype=complex)
 Strainenergy = numpy.zeros((Nx), dtype=complex)
@@ -63,12 +87,23 @@ nonlin = numpy.zeros((Nx), dtype=float)
 nonlinhat = numpy.zeros((Nx), dtype=complex)
 
 t = 0.0
-u = -numpy.tanh(xx-c*t + a) + numpy.tanh(xx+c*t - a) + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
-uexact = -numpy.tanh(xx-c*t + a) + numpy.tanh(xx+c*t - a) + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
-uold = -numpy.tanh(xx-c*(t-dt) + a) + numpy.tanh(xx+c*(t-dt) - a) + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+u1 = -numpy.tanh(xx-c*t + a)  #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+uexact1 = -numpy.tanh(xx-c*t + a) #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+uold1 = -numpy.tanh(xx-c*(t-dt) + a)  #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+v1 = numpy.fft.fftn(u1)
+vold1 = numpy.fft.fftn(uold1)
+
+u2 = numpy.tanh(xx+c*t - a)  #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+uexact2 = numpy.tanh(xx+c*t - a) #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+uold2 = numpy.tanh(xx+c*(t-dt) - a)  #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+v2 = numpy.fft.fftn(u2)
+vold2 = numpy.fft.fftn(uold2)
+
+u = u1 + u2 + 1  #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+uexact = uexact1 + uexact2 + 1      #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+uold = uold1 + uold2 + 1     #<- two kink  #numpy.tanh(xx-c*t) <-single kink
 v = numpy.fft.fftn(u)
 vold = numpy.fft.fftn(uold)
-
 
 #Not shown 
 fig = plt.figure()
@@ -93,7 +128,7 @@ ux = numpy.real(numpy.fft.ifftn(vx))
 Kineticenergy = 0.5 * ((u - uold) / dt) ** 2
 Strainenergy = 0.5* (ux) ** 2
 Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)#0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
-#InteractionForce =
+InteractionForce = -0.5 * (((u - uold) / dt) ** 2 + (ux) ** 2) + 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)
 fKineticenergy = [Kineticenergy]
 fPotentialenergy = [Potentialenergy]
 fStrainenergy = [Strainenergy]
@@ -101,12 +136,18 @@ fStrainenergy = [Strainenergy]
 Ekinsum = 0
 Epotsum = 0
 Estrsum = 0
+IntFsum = 0
 for i in range(len(xx)):
     if (xx[i] > -90) & (xx[i] < 90):
         Ekinsum = Ekinsum + Kineticenergy[i]*dx
         Epotsum = Epotsum + Potentialenergy[i]*dx
         Estrsum = Estrsum + Strainenergy[i]*dx
 
+for i in range(len(xx)):
+    if (xx[i] > b-dx/2) & (xx[i] <= b+dx/2):
+        IntFsum = InteractionForce[i]
+
+F[0] = IntFsum
 EnKin[0] = Ekinsum
 EnPot[0] = Epotsum
 EnStr[0] = Estrsum
@@ -116,6 +157,21 @@ En[0] = EnStr[0] + EnPot[0] + EnKin[0]
 tdata[0] = t
 plotnum = 0
 
+#analytical interaction force
+x1 = 0
+x2 = 0
+counter1 = 0
+counter2 = 0
+for i in range(len(xx)):
+    if (counter1 < 2) & (xx[i] < 0) & (u[i] < 0.0+0.05) & (u[i] > 0.0-0.05):
+        x1 = xx[i]
+        counter1 = counter1 + 1
+
+    if (counter2 < 2) & (xx[i] > 0) & (u[i] < 0.0 + 0.05) & (u[i] > 0.0 - 0.05):
+        x2 = xx[i]
+        counter2 = counter2 + 1
+R = abs(x1-x2)
+Fana[0] = 32 * numpy.exp(-2*R)
 
 #analytical                                           ######################old########################################################
 Kineticenergyana = 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2
@@ -167,7 +223,9 @@ for nt in xrange(numplots - 1):
         uold = u
         u = unew
     plotnum += 1
-    uexact = -numpy.tanh(xx-c*t + a) + numpy.tanh(xx+c*t - a) + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+    uexact1 = -numpy.tanh(xx-c*t + a)
+    uexact2 = numpy.tanh(xx+c*t - a)
+    uexact = uexact1 + uexact2 + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
     ax = fig.add_subplot(211)
     plt.cla()
     ax.plot(xx, u, 'b-', label='$\phi$')
@@ -197,6 +255,7 @@ for nt in xrange(numplots - 1):
     Kineticenergy = 0.5 * ((u-uold) / dt) ** 2
     Strainenergy = 0.5 * (ux) ** 2
     Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)#0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
+    InteractionForce = -0.5 * (((u - uold) / dt) ** 2 + (ux) ** 2) + 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)
     fKineticenergy.extend([Kineticenergy])
     fPotentialenergy.extend([Potentialenergy])
     fStrainenergy.extend([Strainenergy])
@@ -230,23 +289,75 @@ for nt in xrange(numplots - 1):
     Ekinsum = 0
     Epotsum = 0
     Estrsum = 0
+    IntFsum = 0
+
     for i in range(len(xx)):
         if (xx[i] > -15) & (xx[i] < 15):
             Ekinsum = Ekinsum + Kineticenergy[i]*dx
             Epotsum = Epotsum + Potentialenergy[i]*dx
             Estrsum = Estrsum + Strainenergy[i]*dx
+
+    for i in range(len(xx)):
+        if (xx[i] > b - dx / 2) & (xx[i] <= b + dx / 2):
+            IntFsum = InteractionForce[i]
+
+    F[plotnum] = IntFsum
     EnKin[plotnum] = Ekinsum #numpy.real(Kineticenergy[0])
     EnPot[plotnum] = Epotsum #numpy.real(Potentialenergy[0])
     EnStr[plotnum] = Estrsum #numpy.real(Strainenergy[0])
     En[plotnum] = EnStr[plotnum] + EnPot[plotnum] + EnKin[plotnum]
     #Enchange[plotnum - 1] = numpy.log(abs(1 - En[plotnum] / EnO))
+
+    # analytical interaction force
+    x1 = 0
+    x2 = 0
+    counter1 = 0
+    counter2 = 0
+    uj1 = 1
+    uj2 = 1
+    for i in range(len(xx)):
+        if (xx[i] < 0) & (u[i] > -0.04) & (uj1 > u[i]):
+            x1 = xx[i]
+            uj1 = u[i]
+        if (xx[i] > 0) & (u[i] > -0.04) & (uj2 > u[i]):
+            x2 = xx[i]
+            uj2 = u[i]
+        """if (counter1 < 2) & (xx[i] < 0) & (u[i] < 0.0 + 0.05) & (u[i] > 0.0 - 0.05):
+            x1 = x1 +xx[i]
+            counter1 = counter1 + 1
+
+        if (counter2 < 2) & (xx[i] > 0) & (u[i] < 0.0 + 0.05) & (u[i] > 0.0 - 0.05):
+            x2 = x2 + xx[i]
+            counter2 = counter2 + 1
+    if counter1 == 2:
+        x1 = x1/2
+    if counter2 == 2:
+        x2 = x2/2"""
+    R = abs(x1 - x2)
+    #print(R)
+    Fana[plotnum] = 32 * numpy.exp(-2 * R)
+
     tdata[plotnum] = t
 
 plt.ioff()
 plt.show()
 
 
+#animation on the interaction energy between two kink
 
+fig = plt.figure()
+ax1 = fig.add_subplot(2, 1, 1)
+#ax2 = fig.add_subplot(2, 1, 2)
+ax1.set_ylabel('$F_{interaction}$')
+ax1.set_ylim(0, 0.01)
+lines = []
+for i in range(len(tdata)):
+    line1,  = ax1.plot(tdata[:i], F[:i], color='red')
+    line1a,  = ax1.plot(tdata[:i], Fana[:i], color='blue')
+    lines.append([line1, line1a])
+
+ani = animation.ArtistAnimation(fig, lines, interval=65, blit=True)
+plt.show()
 
 #animation of live quantities, energy and energy split
 """
@@ -300,7 +411,7 @@ ani.save('totalenergy_and_split_kinetic.gif', writer='D_M')
 
 #animation of the simulated solution and error
 
-fig = plt.figure()
+"""fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)
 plt.ylabel('$\phi_{simulated}$')
 ax2 = fig.add_subplot(2, 1, 2)
@@ -330,7 +441,7 @@ def update(i):
 ani = animation.FuncAnimation(fig, update, frames=numplots, interval=75)
 plt.legend()
 plt.show()
-#ani.save('two_kink_attraction.gif', writer='D_M')
+#ani.save('two_kink_attraction.gif', writer='D_M')"""
 
 
 
