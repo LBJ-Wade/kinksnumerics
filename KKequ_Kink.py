@@ -17,7 +17,8 @@ Lx = 128.0  # Period 2*pi*Lx
 Nx = 8192  # Number of harmonics
 Nt = 10000  # Number of time slices
 tmax = 100.0  # Maximum time
-c = 0.1#0.1  # Wave speed
+c = 0.0#0.1  # Wave speed
+a = 3 #two kink seperation
 dt = tmax / Nt  # time step
 plotgap = 50  # time steps between plots
 numplots = Nt / plotgap  # number of plots to make
@@ -45,6 +46,7 @@ v = numpy.zeros((Nx), dtype=complex)
 vold = numpy.zeros((Nx), dtype=complex)
 ux = numpy.zeros((Nx), dtype=float)
 vx = numpy.zeros((Nx), dtype=complex)
+InteractionForce = numpy.zeros((Nx), dtype=complex)
 Kineticenergy = numpy.zeros((Nx), dtype=complex)
 Potentialenergy = numpy.zeros((Nx), dtype=complex)
 Strainenergy = numpy.zeros((Nx), dtype=complex)
@@ -61,9 +63,9 @@ nonlin = numpy.zeros((Nx), dtype=float)
 nonlinhat = numpy.zeros((Nx), dtype=complex)
 
 t = 0.0
-u = numpy.tanh(xx-c*t)# -numpy.tanh(xx-c*t+5) + numpy.tanh(xx+c*t-5) + 1
-uexact = numpy.tanh(xx-c*t)#-numpy.tanh(xx-c*t+5) + numpy.tanh(xx+c*t-5) + 1
-uold = numpy.tanh(xx-c*(t-dt))#-numpy.tanh(xx-c*(t-dt)+5) + numpy.tanh(xx+c*(t-dt)-5) + 1
+u = -numpy.tanh(xx-c*t + a) + numpy.tanh(xx+c*t - a) + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+uexact = -numpy.tanh(xx-c*t + a) + numpy.tanh(xx+c*t - a) + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+uold = -numpy.tanh(xx-c*(t-dt) + a) + numpy.tanh(xx+c*(t-dt) - a) + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
 v = numpy.fft.fftn(u)
 vold = numpy.fft.fftn(uold)
 
@@ -91,6 +93,7 @@ ux = numpy.real(numpy.fft.ifftn(vx))
 Kineticenergy = 0.5 * ((u - uold) / dt) ** 2
 Strainenergy = 0.5* (ux) ** 2
 Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)#0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
+#InteractionForce =
 fKineticenergy = [Kineticenergy]
 fPotentialenergy = [Potentialenergy]
 fStrainenergy = [Strainenergy]
@@ -114,7 +117,7 @@ tdata[0] = t
 plotnum = 0
 
 
-#analytical
+#analytical                                           ######################old########################################################
 Kineticenergyana = 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2
 Strainenergyana = 0.5 * (1/(numpy.cosh(-c * t + xx))**2)**2
 Potentialenergyana = 0.5 * ((numpy.tanh(xx - c * t)) ** 4 - 2 * (numpy.tanh(xx - c * t)) ** 2 + 1)
@@ -164,7 +167,7 @@ for nt in xrange(numplots - 1):
         uold = u
         u = unew
     plotnum += 1
-    uexact = numpy.tanh(xx-c*t)# -numpy.tanh(xx-c*t+5) + numpy.tanh(xx+c*t-5) +1
+    uexact = -numpy.tanh(xx-c*t + a) + numpy.tanh(xx+c*t - a) + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
     ax = fig.add_subplot(211)
     plt.cla()
     ax.plot(xx, u, 'b-', label='$\phi$')
@@ -175,14 +178,14 @@ for nt in xrange(numplots - 1):
     plt.xlabel('x')
     plt.ylabel('$\phi$, $\phi_{exact}$')
     plt.legend()
-    """ax = fig.add_subplot(212)
+    ax = fig.add_subplot(212)
     plt.cla()
     ax.plot(xx, abs(u - uexact), 'b-')#ax.plot(xx, uexact, 'b-')
     plt.xlim(-10, 10)
     plt.ylim(-0.5, 0.5)
     plt.xlabel('x')
     plt.ylabel('error')
-    plt.draw()"""
+    plt.draw()
     #plt.savefig(str(name[ntt]))############## for png saving
     us.extend([u])
     uex.extend([uexact])
@@ -197,7 +200,7 @@ for nt in xrange(numplots - 1):
     fKineticenergy.extend([Kineticenergy])
     fPotentialenergy.extend([Potentialenergy])
     fStrainenergy.extend([Strainenergy])
-    #analytical
+    #analytical                                       ######################old########################################################
     Kineticenergyana = 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2
     Strainenergyana = 0.5 * (1/(numpy.cosh(-c * t + xx))**2)**2
     Potentialenergyana = 0.5 * ((numpy.tanh(xx - c * t)) ** 4 - 2 * (numpy.tanh(xx - c * t)) ** 2 + 1)
@@ -211,7 +214,7 @@ for nt in xrange(numplots - 1):
     EnPotana.extend([integrate.quad(lambda x: 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -numpy.inf, numpy.inf)[0]])
     Enana.extend([integrate.quad(lambda x: 0.5 * (-c * 1/(numpy.cosh(c * t - x))**2)**2 + 0.5 * (1/(numpy.cosh(-c * t + x))**2)**2 + 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -numpy.inf, numpy.inf)[0]])
 
-    ax = fig.add_subplot(212)
+    """ax = fig.add_subplot(212)
     plt.cla()
     ax.plot(xx, Kineticenergy, 'b-')  # ax.plot(xx, uexact, 'b-')
     ax.plot(xx, Kineticenergyana, 'r-')
@@ -219,7 +222,7 @@ for nt in xrange(numplots - 1):
     plt.ylim(0, 0.02)
     plt.xlabel('x')
     plt.ylabel('Epot')
-    plt.draw()
+    plt.draw()"""
 
     #Kineticenergy = numpy.fft.fftn(Kineticenergy)
     #Strainenergy = numpy.fft.fftn(Strainenergy)
@@ -246,7 +249,7 @@ plt.show()
 
 
 #animation of live quantities, energy and energy split
-
+"""
 fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)
 ax2 = fig.add_subplot(2, 1, 2)
@@ -270,26 +273,26 @@ for i in range(len(tdata)):
     #line2e, = ax2.plot(tdata[:i], EnStrana[:i], color='green', label='$E_{Str,ana}$')
     lines.append([line1, line1a, line2, line2a])
 
-"""
-line1, = ax1.plot(xx, fStrainenergy[0], 'r-')
-line1a, = ax1.plot(xx, fStrainenergyana[0], 'b-')
-line2, = ax2.plot(xx, fPotentialenergyerror[0], 'b-')
-def update(i):
-    new_data1 = fStrainenergy[i:i+1]
-    line1.set_ydata(new_data1)
-    new_data1a = fStrainenergyana[i:i+1]
-    line1a.set_ydata(new_data1a)
-    new_data2 = fPotentialenergyerror[i:i+1]
-    line2.set_ydata(new_data2)
-    return line1a, line1, line2,
-"""
-"""ani = animation.FuncAnimation(fig, update, frames=numplots, interval=75)
-plt.show()"""
+
+#line1, = ax1.plot(xx, fStrainenergy[0], 'r-')
+#line1a, = ax1.plot(xx, fStrainenergyana[0], 'b-')
+#line2, = ax2.plot(xx, fPotentialenergyerror[0], 'b-')
+#def update(i):
+#    new_data1 = fStrainenergy[i:i+1]
+#    line1.set_ydata(new_data1)
+#    new_data1a = fStrainenergyana[i:i+1]
+#    line1a.set_ydata(new_data1a)
+#    new_data2 = fPotentialenergyerror[i:i+1]
+#    line2.set_ydata(new_data2)
+#    return line1a, line1, line2,
+#
+#ani = animation.FuncAnimation(fig, update, frames=numplots, interval=75)
+#plt.show()
 ani = animation.ArtistAnimation(fig, lines, interval=50, blit=True)
 plt.show()
 
 ani.save('totalenergy_and_split_kinetic.gif', writer='D_M')
-
+"""
 
 
 
@@ -297,13 +300,14 @@ ani.save('totalenergy_and_split_kinetic.gif', writer='D_M')
 
 #animation of the simulated solution and error
 
-"""fig = plt.figure()
+fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)
 plt.ylabel('$\phi_{simulated}$')
 ax2 = fig.add_subplot(2, 1, 2)
-line1, = ax1.plot(xx, us[0], 'r-')
-line1a, = ax1.plot(xx, uex[0], 'b-')
+line1, = ax1.plot(xx, us[0], 'r-', label='$\phi$')
+line1a, = ax1.plot(xx, uex[0], 'b-', label='$\phi_{exact}$' )
 line2, = ax2.plot(xx, uerror[0], 'b-')
+plt.legend()
 ax1.set_ylim(-2, 3)
 ax1.set_xlim(-10, 10)
 ax2.set_ylim(0, 0.2)
@@ -311,7 +315,7 @@ ax2.set_xlim(-10, 10)
 plt.xlabel('x')
 plt.ylabel('$|\phi_{simulated}-\phi_{exact}|$')
 plt.hlines(0.05,-10,10,colors='black',linestyles='--')
-plt.legend()
+
 
 def update(i):
     new_data1 = us[i:i+1]
@@ -324,10 +328,11 @@ def update(i):
 
 
 ani = animation.FuncAnimation(fig, update, frames=numplots, interval=75)
+plt.legend()
 plt.show()
-#ani.save('one_kink_moving.gif', writer='D_M')
+ani.save('two_kink_attraction.gif', writer='D_M')
 
-"""
+
 
 
 
