@@ -16,12 +16,12 @@ plt.ion()
 Lx = 128.0  # Period 2*pi*Lx
 Nx = 16384  # Number of harmonics
 Nt = 10000  # Number of time slices
-tmax = 85.0  # Maximum time
+tmax = 110.0  # Maximum time
 c = 0.0#0.1  # Wave speed
 a = 3 #two kink seperation
 b = 0 #Point between two kinks
 dt = tmax / Nt  # time step
-plotgap = 50  # time steps between plots
+plotgap = 25  # time steps between plots
 numplots = Nt / plotgap  # number of plots to make
 
 x = [i * 2.0 * math.pi * (Lx / Nx) for i in xrange(-Nx / 2, 1 + Nx / 2)]
@@ -157,6 +157,7 @@ En[0] = EnStr[0] + EnPot[0] + EnKin[0]
 tdata[0] = t
 plotnum = 0
 
+
 #analytical interaction force
 x1 = 0
 x2 = 0
@@ -171,7 +172,7 @@ for i in range(len(xx)):
         x2 = xx[i]
         counter2 = counter2 + 1
 R = abs(x1-x2)
-Fana[0] = 32 * numpy.exp(-2*R)
+Fana[0] = 32 * numpy.exp(-2*2*a)
 
 #analytical                                           ######################old########################################################
 Kineticenergyana = 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2
@@ -205,9 +206,12 @@ plt.show()"""
 #    name.extend([str(i+1)+".png"])
 #    print(name[i])
 ntt = 0
+v0part = []
+v0part.append(0)
+
 #
 us = [u]
-uex = [uexact]
+uex = [uexact] #here the exact solution if we apply the force
 uerror = [abs(u-uexact)]
 
 for nt in xrange(numplots - 1):
@@ -223,10 +227,25 @@ for nt in xrange(numplots - 1):
         uold = u
         u = unew
     plotnum += 1
-    uexact1 = -numpy.tanh(xx-c*t + a)
-    uexact2 = numpy.tanh(xx+c*t - a)
-    uexact = uexact1 + uexact2 + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
-    ax = fig.add_subplot(211)
+
+
+    # analytical interaction force
+    x1 = 0
+    x2 = 0
+    uj1 = 1
+    uj2 = 1
+    for i in range(len(xx)):
+        if (xx[i] < 0) & (u[i] > -0.05) & (uj1 > u[i]):
+            x1 = xx[i]
+            uj1 = u[i]
+        if (xx[i] > 0) & (u[i] > -0.05) & (uj2 > u[i]):
+            x2 = xx[i]
+            uj2 = u[i]
+    R = abs(x1 - x2)
+
+    Fana[plotnum] = 32*numpy.exp(-2*R)
+
+    """ax = fig.add_subplot(211)
     plt.cla()
     ax.plot(xx, u, 'b-', label='$\phi$')
     ax.plot(xx, uexact, 'r-', label='$\phi_{exact}$')
@@ -243,7 +262,7 @@ for nt in xrange(numplots - 1):
     plt.ylim(-0.5, 0.5)
     plt.xlabel('x')
     plt.ylabel('error')
-    plt.draw()
+    plt.draw()"""
     #plt.savefig(str(name[ntt]))############## for png saving
     us.extend([u])
     uex.extend([uexact])
@@ -307,37 +326,15 @@ for nt in xrange(numplots - 1):
     EnStr[plotnum] = Estrsum #numpy.real(Strainenergy[0])
     En[plotnum] = EnStr[plotnum] + EnPot[plotnum] + EnKin[plotnum]
     #Enchange[plotnum - 1] = numpy.log(abs(1 - En[plotnum] / EnO))
-
-    # analytical interaction force
-    x1 = 0
-    x2 = 0
-    counter1 = 0
-    counter2 = 0
-    uj1 = 1
-    uj2 = 1
-    for i in range(len(xx)):
-        if (xx[i] < 0) & (u[i] > -0.04) & (uj1 > u[i]):
-            x1 = xx[i]
-            uj1 = u[i]
-        if (xx[i] > 0) & (u[i] > -0.04) & (uj2 > u[i]):
-            x2 = xx[i]
-            uj2 = u[i]
-        """if (counter1 < 2) & (xx[i] < 0) & (u[i] < 0.0 + 0.05) & (u[i] > 0.0 - 0.05):
-            x1 = x1 +xx[i]
-            counter1 = counter1 + 1
-
-        if (counter2 < 2) & (xx[i] > 0) & (u[i] < 0.0 + 0.05) & (u[i] > 0.0 - 0.05):
-            x2 = x2 + xx[i]
-            counter2 = counter2 + 1
-    if counter1 == 2:
-        x1 = x1/2
-    if counter2 == 2:
-        x2 = x2/2"""
-    R = abs(x1 - x2)
-    #print(R)
-    Fana[plotnum] = 32 * numpy.exp(-2 * R)
+    deltat= t-tdata[plotnum-1]
+    v0 = 0
+    for i in range(len(v0part)):
+        v0 = v0 + v0part[i]
+    a = 0.5*(2*a - 2 * v0*deltat - 2 * 0.5 * Fana[plotnum] * deltat**2)
+    uexact = -numpy.tanh(xx + a) + numpy.tanh(xx - a) + 1  # <- two kink  #numpy.tanh(xx-c*t) <-single kink
 
     tdata[plotnum] = t
+    v0part.append( Fana[plotnum] * deltat)
 
 plt.ioff()
 plt.show()
@@ -356,9 +353,9 @@ for i in range(len(tdata)):
     line1a,  = ax1.plot(tdata[:i], Fana[:i], color='blue')
     lines.append([line1, line1a])
 
-ani = animation.ArtistAnimation(fig, lines, interval=65, blit=True)
+ani = animation.ArtistAnimation(fig, lines, interval=45, blit=True)
 plt.show()
-ani.save('interaction_force_two_kink.gif', writer='D_M')
+#ani.save('interaction_force_two_kink.gif', writer='D_M')
 
 #animation of live quantities, energy and energy split
 """
@@ -412,7 +409,7 @@ ani.save('totalenergy_and_split_kinetic.gif', writer='D_M')
 
 #animation of the simulated solution and error
 
-"""fig = plt.figure()
+fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)
 plt.ylabel('$\phi_{simulated}$')
 ax2 = fig.add_subplot(2, 1, 2)
@@ -422,11 +419,11 @@ line2, = ax2.plot(xx, uerror[0], 'b-')
 plt.legend()
 ax1.set_ylim(-2, 3)
 ax1.set_xlim(-10, 10)
-ax2.set_ylim(0, 0.2)
+ax2.set_ylim(0, 0.5)
 ax2.set_xlim(-10, 10)
 plt.xlabel('x')
 plt.ylabel('$|\phi_{simulated}-\phi_{exact}|$')
-plt.hlines(0.05,-10,10,colors='black',linestyles='--')
+plt.hlines(0.1,-10,10,colors='black',linestyles='--')
 
 
 def update(i):
@@ -439,10 +436,10 @@ def update(i):
     return line1, line2,
 
 
-ani = animation.FuncAnimation(fig, update, frames=numplots, interval=75)
+ani = animation.FuncAnimation(fig, update, frames=numplots, interval=55)
 plt.legend()
 plt.show()
-#ani.save('two_kink_attraction.gif', writer='D_M')"""
+ani.save('two_kink_attraction_corrected.gif', writer='D_M')
 
 
 
