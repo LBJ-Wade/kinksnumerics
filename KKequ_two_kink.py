@@ -330,11 +330,11 @@ for nt in xrange(numplots - 1):
     v0 = 0
     for i in range(len(v0part)):
         v0 = v0 + v0part[i]
-    a = 0.5*(2*a - 2 * v0*deltat - 2 * 0.5 * Fana[plotnum] * deltat**2)
+    a = 0.5*(2*a - 2 * v0*deltat - 2 * 0.5 * F[plotnum] * deltat**2)
     uexact = -numpy.tanh(xx + a) + numpy.tanh(xx - a) + 1  # <- two kink  #numpy.tanh(xx-c*t) <-single kink
 
     tdata[plotnum] = t
-    v0part.append( Fana[plotnum] * deltat)
+    v0part.append( F[plotnum] * deltat)
 
 plt.ioff()
 plt.show()
@@ -439,7 +439,7 @@ def update(i):
 ani = animation.FuncAnimation(fig, update, frames=numplots, interval=55)
 plt.legend()
 plt.show()
-ani.save('two_kink_attraction_corrected.gif', writer='D_M')
+#ani.save('two_kink_attraction_corrected_simulated_force.gif', writer='D_M')
 
 
 
