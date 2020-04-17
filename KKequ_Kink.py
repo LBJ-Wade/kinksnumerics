@@ -17,7 +17,8 @@ Lx = 128.0  # Period 2*pi*Lx
 Nx = 8192  # Number of harmonics
 Nt = 10000  # Number of time slices
 tmax = 100.0  # Maximum time
-c = 0.0#0.1  # Wave speed
+c = 0.1#0.1  # Wave speed
+gamma = 1/numpy.sqrt(1-c**2)
 a = 3 #two kink seperation
 dt = tmax / Nt  # time step
 plotgap = 50  # time steps between plots
@@ -63,9 +64,9 @@ nonlin = numpy.zeros((Nx), dtype=float)
 nonlinhat = numpy.zeros((Nx), dtype=complex)
 
 t = 0.0
-u = -numpy.tanh(xx-c*t + a) + numpy.tanh(xx+c*t - a) + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
-uexact = -numpy.tanh(xx-c*t + a) + numpy.tanh(xx+c*t - a) + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
-uold = -numpy.tanh(xx-c*(t-dt) + a) + numpy.tanh(xx+c*(t-dt) - a) + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+u = numpy.tanh(gamma*(xx-c*t)) #<-single kink
+uexact = numpy.tanh(gamma*(xx-c*t)) #<-single kink
+uold = numpy.tanh(gamma*(xx-c*(t-dt))) #<-single kink
 v = numpy.fft.fftn(u)
 vold = numpy.fft.fftn(uold)
 
@@ -152,7 +153,7 @@ ntt = 0
 #
 us = [u]
 uex = [uexact]
-uerror = [abs(u-uexact)]
+uerror = [abs(u-uexact)*1000]
 
 for nt in xrange(numplots - 1):
     for n in xrange(plotgap):
@@ -167,7 +168,7 @@ for nt in xrange(numplots - 1):
         uold = u
         u = unew
     plotnum += 1
-    uexact = -numpy.tanh(xx-c*t + a) + numpy.tanh(xx+c*t - a) + 1 #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+    uexact = numpy.tanh(gamma*(xx-c*t)) #<-single kink
     ax = fig.add_subplot(211)
     plt.cla()
     ax.plot(xx, u, 'b-', label='$\phi$')
@@ -189,7 +190,7 @@ for nt in xrange(numplots - 1):
     #plt.savefig(str(name[ntt]))############## for png saving
     us.extend([u])
     uex.extend([uexact])
-    uerror.extend([abs(u - uexact)])
+    uerror.extend([abs(u - uexact)*1000])
     ntt += 1
 
     vx = 0.5 * kxm * (v + vold)
@@ -305,16 +306,16 @@ ax1 = fig.add_subplot(2, 1, 1)
 plt.ylabel('$\phi_{simulated}$')
 ax2 = fig.add_subplot(2, 1, 2)
 line1, = ax1.plot(xx, us[0], 'r-', label='$\phi$')
-line1a, = ax1.plot(xx, uex[0], 'b-', label='$\phi_{exact}$' )
+line1a, = ax1.plot(xx, uex[0], 'b-', label='$\phi_{exact}$')
 line2, = ax2.plot(xx, uerror[0], 'b-')
 plt.legend()
 ax1.set_ylim(-2, 3)
 ax1.set_xlim(-10, 10)
-ax2.set_ylim(0, 0.2)
+ax2.set_ylim(0, 1)
 ax2.set_xlim(-10, 10)
 plt.xlabel('x')
-plt.ylabel('$|\phi_{simulated}-\phi_{exact}|$')
-plt.hlines(0.05,-10,10,colors='black',linestyles='--')
+plt.ylabel('$|\phi_{simulated}-\phi_{exact}|\,\,\,\,\,[10^{-3}]$')
+#plt.hlines(0.001,-10,10,colors='black',linestyles='--')
 
 
 def update(i):
@@ -330,7 +331,7 @@ def update(i):
 ani = animation.FuncAnimation(fig, update, frames=numplots, interval=75)
 plt.legend()
 plt.show()
-#ani.save('two_kink_attraction.gif', writer='D_M')
+ani.save('one_kink_moving.gif', writer='D_M')
 
 
 
