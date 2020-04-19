@@ -86,9 +86,9 @@ nonlinhat = numpy.zeros((Nx), dtype=complex)
 
 t = -50.0
 
-u = 4*numpy.arctan(c*numpy.sinh(gamma*xx)/numpy.cosh(gamma*c*t)) #<- two kink  #numpy.tanh(xx-c*t) <-single kink
-uexact = 4*numpy.arctan(c*numpy.sinh(gamma*xx)/numpy.cosh(gamma*c*t))  #<- two kink  #numpy.tanh(xx-c*t) <-single kink
-uold = 4*numpy.arctan(c*numpy.sinh(gamma*xx)/numpy.cosh(gamma*c*(t-dt)))     #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+u = 4*numpy.arctan(-c*numpy.cosh(gamma*xx)/numpy.sinh(gamma*c*t)) #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+uexact = 4*numpy.arctan(-c*numpy.cosh(gamma*xx)/numpy.sinh(gamma*c*t))  #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+uold = 4*numpy.arctan(-c*numpy.cosh(gamma*xx)/numpy.sinh(gamma*c*(t-dt)))     #<- two kink  #numpy.tanh(xx-c*t) <-single kink
 v = numpy.fft.fftn(u)
 vold = numpy.fft.fftn(uold)
 
@@ -199,9 +199,9 @@ v0part.append(0)
 #
 us = [u]
 uex = [uexact] #here the exact solution if we apply the force
-uerror = [abs((u - uexact)/uexact)*100]
+uerror = [abs((u - uexact)/uexact)*1000]
 for i in range(len(uerror[0])):
-    if abs(uexact[i]) < 10**-5:
+    if abs(uexact[i]) < 10**-7:
         uerror[0][i] = uexact[i]
 
 for nt in xrange(numplots - 1):
@@ -224,7 +224,7 @@ for nt in xrange(numplots - 1):
     #    v0 = v0 + v0part[i]
     #a = 0.5 * (2 * a - 2 * v0 * deltat - 2 * 0.5 * Fana[plotnum] * deltat ** 2)
     #gamma = 1 / numpy.sqrt(1 - v0 ** 2)
-    uexact = 4 * numpy.arctan(c * numpy.sinh(gamma * xx) / numpy.cosh(gamma * c * t))
+    uexact = 4 * numpy.arctan(-c * numpy.cosh(gamma * xx) / numpy.sinh(gamma * c * t))
     # analytical interaction force
     x1 = 0
     x2 = 0
@@ -263,10 +263,10 @@ for nt in xrange(numplots - 1):
     us.extend([u])
     uex.extend([uexact])
 
-    uerror.extend([abs((u - uexact)/uexact)*100])
+    uerror.extend([abs((u - uexact)/uexact)*1000])
     ntt += 1
     for i in range(len(uerror[plotnum])):
-        if abs(uexact[i]) < 10**-5:
+        if abs(uerror[plotnum][i]) > 10**5:
             uerror[plotnum][i] = uexact[i]
 
     vx = 0.5 * kxm * (v + vold)
@@ -435,7 +435,7 @@ def update(i):
 ani = animation.FuncAnimation(fig, update, frames=numplots, interval=35)
 plt.legend()
 plt.show()
-ani.save('two_kink_sine_gordon.gif', writer='D_M')
+#ani.save('two_kink_sine_gordon.gif', writer='D_M')
 
 
 
