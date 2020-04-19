@@ -153,7 +153,10 @@ ntt = 0
 #
 us = [u]
 uex = [uexact]
-uerror = [abs(u-uexact)*1000]
+uerror = [abs((u - uexact)/uexact)*1000]
+for i in range(len(uerror[0])):
+    if abs(uerror[0][i]) > 10**5:
+        uerror[0][i] = uexact[i]
 
 for nt in xrange(numplots - 1):
     for n in xrange(plotgap):
@@ -190,8 +193,11 @@ for nt in xrange(numplots - 1):
     #plt.savefig(str(name[ntt]))############## for png saving
     us.extend([u])
     uex.extend([uexact])
-    uerror.extend([abs(u - uexact)*1000])
+    uerror.extend([abs((u - uexact)/uexact)*1000])
     ntt += 1
+    for i in range(len(uerror[plotnum])):
+        if abs(uerror[plotnum][i]) > 10**5:
+            uerror[plotnum][i] = uexact[i]
 
     vx = 0.5 * kxm * (v + vold)
     ux = numpy.real(numpy.fft.ifftn(vx))
@@ -314,7 +320,7 @@ ax1.set_xlim(-10, 10)
 ax2.set_ylim(0, 1)
 ax2.set_xlim(-10, 10)
 plt.xlabel('x')
-plt.ylabel('$|\phi_{simulated}-\phi_{exact}|\,\,\,\,\,[10^{-3}]$')
+plt.ylabel('$|\\frac{\phi_{simulated}-\phi_{exact}}{\phi_{exact}}|\,\,\,\,\,[10^{-3}]$')
 #plt.hlines(0.001,-10,10,colors='black',linestyles='--')
 
 

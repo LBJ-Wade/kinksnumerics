@@ -212,7 +212,10 @@ v0part.append(0)
 #
 us = [u]
 uex = [uexact] #here the exact solution if we apply the force
-uerror = [abs(u-uexact)]
+uerror = [abs((u - uexact)/uexact)*1000]
+for i in range(len(uerror[0])):
+    if abs(uerror[0][i]) > 10**5:
+        uerror[0][i] = uexact[i]
 
 for nt in xrange(numplots - 1):
     for n in xrange(plotgap):
@@ -265,9 +268,6 @@ for nt in xrange(numplots - 1):
     plt.draw()"""
     #plt.savefig(str(name[ntt]))############## for png saving
     us.extend([u])
-    uex.extend([uexact])
-    uerror.extend([abs(u - uexact)])
-    ntt += 1
 
     vx = 0.5 * kxm * (v + vold)
     ux = numpy.real(numpy.fft.ifftn(vx))
@@ -330,12 +330,22 @@ for nt in xrange(numplots - 1):
     v0 = 0
     for i in range(len(v0part)):
         v0 = v0 + v0part[i]
-    a = 0.5*(2*a - 2 * v0*deltat - 2 * 0.5 * Fana[plotnum] * deltat**2)
+    #a = 0.5*(2*a - 2 * v0*deltat - 2 * 0.5 * Fana[plotnum] * deltat**2)
     gamma=1/numpy.sqrt(1-v0**2)
-    uexact = -numpy.tanh(gamma*(xx + a)) + numpy.tanh(gamma*(xx - a)) + 1  # <- two kink  #numpy.tanh(xx-c*t) <-single kink
+    #uexact = -numpy.tanh(gamma*(xx + a)) + numpy.tanh(gamma*(xx - a)) + 1  # <- two kink  #numpy.tanh(xx-c*t) <-single kink
 
     tdata[plotnum] = t
     v0part.append( Fana[plotnum] * deltat)
+
+    #xt = 0.5*numpy.log(     (numpy.sinh(8*numpy.imag*numpy.sqrt(*numpy.exp(4*a))*(1/16*numpy.exp(2*a)*numpy.pi+t)))/(numpy.sqrt(numpy.exp(-4*a))*numpy.imag)   )
+    #print(xt)
+    uexact = -numpy.tanh(gamma * (xx + xt)) + numpy.tanh(gamma * (xx - xt)) + 1
+    uex.extend([uexact])
+    uerror.extend([abs((u - uexact)/uexact)*1000])
+    ntt += 1
+    for i in range(len(uerror[plotnum])):
+        if abs(uerror[plotnum][i]) > 10**5:
+            uerror[plotnum][i] = uexact[i]
 
 plt.ioff()
 plt.show()
@@ -343,7 +353,7 @@ plt.show()
 
 #animation on the interaction energy between two kink
 
-fig = plt.figure()
+"""fig = plt.figure()
 ax1 = fig.add_subplot(1, 1, 1)
 #ax2 = fig.add_subplot(2, 1, 2)
 ax1.set_ylabel('$F_{interaction}(t=0...85)$')
@@ -355,7 +365,7 @@ for i in range(len(tdata)):
     lines.append([line1, line1a])
 
 ani = animation.ArtistAnimation(fig, lines, interval=45, blit=True)
-plt.show()
+plt.show()"""
 #ani.save('interaction_force_two_kink.gif', writer='D_M')
 
 #animation of live quantities, energy and energy split
@@ -420,11 +430,11 @@ line2, = ax2.plot(xx, uerror[0], 'b-')
 plt.legend()
 ax1.set_ylim(-2, 3)
 ax1.set_xlim(-10, 10)
-ax2.set_ylim(0, 0.5)
+ax2.set_ylim(0, 1)
 ax2.set_xlim(-10, 10)
 plt.xlabel('x')
 plt.ylabel('$|\phi_{simulated}-\phi_{exact}|$')
-plt.hlines(0.1,-10,10,colors='black',linestyles='--')
+#plt.hlines(0.1,-10,10,colors='black',linestyles='--')
 
 
 def update(i):
