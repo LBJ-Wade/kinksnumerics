@@ -13,13 +13,14 @@ def truncate(n, decimals=0):
 plt.ion()
 
 # Grid
+#Step 0: adapt as you wish
 Lx = 128.0  # Period 2*pi*Lx
 Nx = 8192  # Number of harmonics
 Nt = 10000  # Number of time slices
 tmax = 100.0  # Maximum time
-c = 0.1#0.1  # Wave speed
+c = 0.1# 0.1  # Wave speed
 gamma = 1/numpy.sqrt(1-c**2)
-a = 3 #two kink seperation
+a = 3 # two kink separation (can be introduced in multi-kink scenario)
 dt = tmax / Nt  # time step
 plotgap = 50  # time steps between plots
 numplots = Nt / plotgap  # number of plots to make
@@ -47,6 +48,7 @@ v = numpy.zeros((Nx), dtype=complex)
 vold = numpy.zeros((Nx), dtype=complex)
 ux = numpy.zeros((Nx), dtype=float)
 vx = numpy.zeros((Nx), dtype=complex)
+# Arrays usuful to calculate intercation force and energies
 InteractionForce = numpy.zeros((Nx), dtype=complex)
 Kineticenergy = numpy.zeros((Nx), dtype=complex)
 Potentialenergy = numpy.zeros((Nx), dtype=complex)
@@ -63,8 +65,9 @@ tdata = numpy.zeros((numplots), dtype=float)
 nonlin = numpy.zeros((Nx), dtype=float)
 nonlinhat = numpy.zeros((Nx), dtype=complex)
 
+# Step 1: Input your initial analytical function
 t = 0.0
-u = numpy.tanh(gamma*(xx-c*t)) #<-single kink
+u = numpy.tanh(gamma*(xx-c*t)) #<-single kink (analytic solution of the Bogomolny bound)
 uexact = numpy.tanh(gamma*(xx-c*t)) #<-single kink
 uold = numpy.tanh(gamma*(xx-c*(t-dt))) #<-single kink
 v = numpy.fft.fftn(u)
@@ -89,16 +92,21 @@ plt.ylabel('error')
 #plt.show()
 
 # initial energy
+# Step 2: Input the energies of your model. Typically only the potential term should vary. Note that for spatial derivatives use "ux" and
+# for time derivatives ((u - uold) / dt). (reasoning in the readme-file)
 vx = 0.5 * kxm * (v + vold)
 ux = numpy.real(numpy.fft.ifftn(vx))
 Kineticenergy = 0.5 * ((u - uold) / dt) ** 2
 Strainenergy = 0.5* (ux) ** 2
-Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)#0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
-#InteractionForce =
+Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)
+
+# InteractionForce = _enter your analytical expression_
 fKineticenergy = [Kineticenergy]
 fPotentialenergy = [Potentialenergy]
 fStrainenergy = [Strainenergy]
-#sum over an reasonable intervall
+# The numerical solution is only valid for an small interval since we define space only on an limited interval (see definition of xx)
+# Chose the interval over which you sum your energies reasonable. Note that this summation approximately can be done for finite energy boundary conditions
+# since the energy densities Kineticenergy[], Potentialenergy[] and Strainenergy[] are expected to be zero.
 Ekinsum = 0
 Epotsum = 0
 Estrsum = 0
@@ -113,12 +121,10 @@ EnPot[0] = Epotsum
 EnStr[0] = Estrsum
 En[0] = EnStr[0] + EnPot[0] + EnKin[0]
 
-#EnO = En[0]
 tdata[0] = t
 plotnum = 0
 
-
-#analytical                                           ######################old########################################################
+# To compare to analytical results, input the analytical results of your theroy
 Kineticenergyana = 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2
 Strainenergyana = 0.5 * (1/(numpy.cosh(-c * t + xx))**2)**2
 Potentialenergyana = 0.5 * ((numpy.tanh(xx - c * t)) ** 4 - 2 * (numpy.tanh(xx - c * t)) ** 2 + 1)
@@ -126,42 +132,29 @@ fKineticenergyana = [Kineticenergyana]
 fPotentialenergyana = [Potentialenergyana]
 fStrainenergyana = [Strainenergyana]
 fPotentialenergyerror = [abs(Strainenergyana-Strainenergy)]
-#integrate over everything for analyticall
+# Integrate over the whole space (again since vanishing energy density is assumed)
 EnKinana = [integrate.quad(lambda z: 0.5 * (-c * 1 / (numpy.cosh(c * t - z)) ** 2) ** 2, -numpy.inf, numpy.inf)[0]]
 EnStrana = [integrate.quad(lambda z: 0.5 * ((numpy.cosh(-c * t + z)) ** -2) ** 2, -numpy.inf, numpy.inf)[0]]
 EnPotana = [integrate.quad(lambda z: 0.5 * ((numpy.tanh(z - c * t)) ** 4 - 2 * (numpy.tanh(z - c * t)) ** 2 + 1), -numpy.inf, numpy.inf)[0]]
 Enana = [EnStrana[0] + EnPotana[0] + EnKinana[0]]
 
-"""fig = plt.figure()
-ax1 = fig.add_subplot(2, 1, 1)
-ax2 = fig.add_subplot(2, 1, 2)
-ax1.plot(xx, Potentialenergy, 'b-', label='$\phi$')
-ax1.plot(xx, 0.5 * ((numpy.tanh(xx - c * t)) ** 4 - 2 * (numpy.tanh(xx - c * t)) ** 2 + 1), 'r-', label='$\phi_e$')
-ax1.set_xlim(-10, 10)
-ax2.plot(xx, Kineticenergy, 'b-', label='$\phi$')
-ax2.plot(xx, 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2, 'r-', label='$\phi_e$')
-ax2.set_xlim(-10, 10)
-plt.ioff()
-plt.show()"""
 
-# plot each plot in a png
-#name = ["0.png"]
-#for i in range(numplots):
-#    name.extend([str(i+1)+".png"])
-#    print(name[i])
-ntt = 0
-#
-us = [u]
-uex = [uexact]
-uerror = [abs((u - uexact)/uexact)*1000]
+# define the fields (simply for simulatiuon purposes)
+us = [u] # simulated
+uex = [uexact] # exact
+uerror = [abs((u - uexact)/uexact)*1000] # error
 for i in range(len(uerror[0])):
     if abs(uerror[0][i]) > 10**5:
         uerror[0][i] = uexact[i]
 
+# simulate the dynamics and add a plot every plotgap timesteps to your animation
 for nt in xrange(numplots - 1):
+    # actuall simulation
     for n in xrange(plotgap):
+        # if you have non-linear terms in the potential, define here
         nonlin = u ** 3
         nonlinhat = numpy.fft.fftn(nonlin)
+        # Step 3: Solve the fourier transformed equation of motion as suggested in the readme and input here
         vnew = (0.5*(2*v + vold) + kxm**2 *0.25* (2*v + vold) - 2*nonlinhat + (2*v-vold)/(dt*dt))/(1/(dt*dt)-0.25*(kxm**2+2))#((0.25 * (kxm ** 2 - 1) * (2 * v + vold) + (2 * v - vold) / (dt * dt) + Es * nonlinhat) /(1 / (dt * dt) - (kxm ** 2 - 1) * 0.25))
         unew = numpy.real(numpy.fft.ifftn(vnew))
         t += dt
@@ -171,12 +164,13 @@ for nt in xrange(numplots - 1):
         uold = u
         u = unew
     plotnum += 1
+    # Step 4: Once again define your exact solution
     uexact = numpy.tanh(gamma*(xx-c*t)) #<-single kink
+
     ax = fig.add_subplot(211)
     plt.cla()
     ax.plot(xx, u, 'b-', label='$\phi$')
     ax.plot(xx, uexact, 'r-', label='$\phi_{exact}$')
-    #plt.xlim(-10, 10)
     plt.ylim(-1.5, 3.0)
     plt.title('time t=' + str(t))
     plt.xlabel('x')
@@ -184,30 +178,31 @@ for nt in xrange(numplots - 1):
     plt.legend()
     ax = fig.add_subplot(212)
     plt.cla()
-    ax.plot(xx, abs(u - uexact), 'b-')#ax.plot(xx, uexact, 'b-')
+    ax.plot(xx, abs(u - uexact), 'b-')
     plt.xlim(-10, 10)
     plt.ylim(-0.5, 0.5)
     plt.xlabel('x')
     plt.ylabel('error')
     plt.draw()
-    #plt.savefig(str(name[ntt]))############## for png saving
+
+    # add pictures to your animation
     us.extend([u])
     uex.extend([uexact])
     uerror.extend([abs((u - uexact)/uexact)*1000])
-    ntt += 1
     for i in range(len(uerror[plotnum])):
         if abs(uerror[plotnum][i]) > 10**5:
             uerror[plotnum][i] = uexact[i]
 
+    # calculate energies
     vx = 0.5 * kxm * (v + vold)
     ux = numpy.real(numpy.fft.ifftn(vx))
     Kineticenergy = 0.5 * ((u-uold) / dt) ** 2
     Strainenergy = 0.5 * (ux) ** 2
-    Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)#0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
+    Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)
     fKineticenergy.extend([Kineticenergy])
     fPotentialenergy.extend([Potentialenergy])
     fStrainenergy.extend([Strainenergy])
-    #analytical                                       ######################old########################################################
+    # calculate analytical value of energies
     Kineticenergyana = 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2
     Strainenergyana = 0.5 * (1/(numpy.cosh(-c * t + xx))**2)**2
     Potentialenergyana = 0.5 * ((numpy.tanh(xx - c * t)) ** 4 - 2 * (numpy.tanh(xx - c * t)) ** 2 + 1)
@@ -215,25 +210,10 @@ for nt in xrange(numplots - 1):
     fPotentialenergyana.extend([Potentialenergyana])
     fStrainenergyana.extend([Strainenergyana])
     fPotentialenergyerror.extend([abs(Strainenergyana - Strainenergy)])
-
     EnKinana.extend([integrate.quad(lambda x: 0.5 * (-c * 1/(numpy.cosh(c * t - x))**2)**2, -numpy.inf, numpy.inf)[0]])
     EnStrana.extend([integrate.quad(lambda x: 0.5 * (1/(numpy.cosh(-c * t + x))**2)**2, -numpy.inf, numpy.inf)[0]])
     EnPotana.extend([integrate.quad(lambda x: 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -numpy.inf, numpy.inf)[0]])
     Enana.extend([integrate.quad(lambda x: 0.5 * (-c * 1/(numpy.cosh(c * t - x))**2)**2 + 0.5 * (1/(numpy.cosh(-c * t + x))**2)**2 + 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -numpy.inf, numpy.inf)[0]])
-
-    """ax = fig.add_subplot(212)
-    plt.cla()
-    ax.plot(xx, Kineticenergy, 'b-')  # ax.plot(xx, uexact, 'b-')
-    ax.plot(xx, Kineticenergyana, 'r-')
-    plt.xlim(-10, 10)
-    plt.ylim(0, 0.02)
-    plt.xlabel('x')
-    plt.ylabel('Epot')
-    plt.draw()"""
-
-    #Kineticenergy = numpy.fft.fftn(Kineticenergy)
-    #Strainenergy = numpy.fft.fftn(Strainenergy)
-    #Potentialenergy = numpy.fft.fftn(Potentialenergy)
     Ekinsum = 0
     Epotsum = 0
     Estrsum = 0
@@ -242,11 +222,10 @@ for nt in xrange(numplots - 1):
             Ekinsum = Ekinsum + Kineticenergy[i]*dx
             Epotsum = Epotsum + Potentialenergy[i]*dx
             Estrsum = Estrsum + Strainenergy[i]*dx
-    EnKin[plotnum] = Ekinsum #numpy.real(Kineticenergy[0])
-    EnPot[plotnum] = Epotsum #numpy.real(Potentialenergy[0])
-    EnStr[plotnum] = Estrsum #numpy.real(Strainenergy[0])
+    EnKin[plotnum] = Ekinsum
+    EnPot[plotnum] = Epotsum
+    EnStr[plotnum] = Estrsum
     En[plotnum] = EnStr[plotnum] + EnPot[plotnum] + EnKin[plotnum]
-    #Enchange[plotnum - 1] = numpy.log(abs(1 - En[plotnum] / EnO))
     tdata[plotnum] = t
 
 plt.ioff()
@@ -255,7 +234,7 @@ plt.show()
 
 
 
-#animation of live quantities, energy and energy split
+# animation of live quantities, energy and energy split
 """
 fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)
@@ -305,7 +284,7 @@ ani.save('totalenergy_and_split_kinetic.gif', writer='D_M')
 
 
 
-#animation of the simulated solution and error
+# animation of the simulated solution and error
 
 fig = plt.figure()
 ax1 = fig.add_subplot(2, 1, 1)
@@ -348,48 +327,3 @@ ani.save('one_kink_moving.gif', writer='D_M')
 
 
 
-
-
-
-
-
-
-
-# animation of the exact solution #old
-"""
-fig = plt.figure()
-ax = plt.axes(xlim=(-10, 10), ylim=(-2, 3))
-line, = ax.plot([], [], lw=2)
-
-def init():
-    line.set_data([], [])
-    return line,
-
-def animate(i):
-    x = numpy.linspace(-10, 10, 1000)
-    y = -numpy.tanh(x-c*i+5) + numpy.tanh(x+c*i-5) + 1
-    line.set_data(x, y)
-    return line,
-
-anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=200, interval=100, blit=True)
-
-plt.show()
-"""
-
-
-#old stuff
-"""
-plt.figure()
-plt.plot(tdata, En, 'r+', tdata, EnKin, 'b:', tdata, EnPot, 'g-.', tdata, EnStr, 'y--')
-plt.xlabel('Time')
-plt.ylabel('Energy')
-plt.legend(('Total', 'Kinetic', 'Potential', 'Strain'))
-plt.title('Time Dependence of Energy Components')
-plt.show()
-
-plt.figure()
-plt.plot(Enchange, 'r-')
-plt.title('Time Dependence of Change in Total Energy')
-plt.show()
-"""
