@@ -5,7 +5,7 @@ In this repository there are several programs shown that simulate numerically dy
 For simplicity, every model has its own python file. We even split one and mulit-kink solution into separate files which would not be necessary. 
 The files Kkequ_Kink_commented.py and  Kkequ_two_Kink.py simulate the phi^4-theory, Kkequ_two_kink.py the Sine-Gordon model.
 
-The plots that are included in this repository are labeled such that there is no need of further explanation of what they show.
+The plots that are included in this repository are labeled such that there is no need of further explanation of what they show.IMPORTANT:We always plit simulation and analytical result over each other. Simulations in the gif-files are ALWAYS printed red while the analytical solution is printed blue!
 Note however that some plots for static solutions or potentials (since they are trivial analytic functions) are simply done by an simple plot script which is not included in this repository.
 
 The Program Structure: 
