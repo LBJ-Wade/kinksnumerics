@@ -1099,7 +1099,7 @@ for nt in xrange(numplots - 1):
     for n in xrange(plotgap):
         nonlin = u ** 3
         nonlinhat = numpy.fft.fftn(nonlin)
-        vnew = (0.5*(2*v + vold) + kxm**2 *0.25* (2*v + vold) - 2*nonlinhat + (2*v-vold)/(dt*dt))/(1/(dt*dt)-0.25*(kxm**2+2))#((0.25 * (kxm ** 2 - 1) * (2 * v + vold) + (2 * v - vold) / (dt * dt) + Es * nonlinhat) /(1 / (dt * dt) - (kxm ** 2 - 1) * 0.25))
+        vnew = (0.5*(2*v + vold) + kxm**2 *0.25* (2*v + vold) - 2*nonlinhat + (2*v-vold)/(dt*dt))/(1/(dt*dt)-0.25*(kxm**2+2))
         unew = numpy.real(numpy.fft.ifftn(vnew))
         t += dt
         # update old terms
@@ -1132,12 +1132,12 @@ for nt in xrange(numplots - 1):
     ux = numpy.real(numpy.fft.ifftn(vx))
     Kineticenergy = 0.5 * ((u-uold) / dt) ** 2
     Strainenergy = 0.5 * (ux) ** 2
-    Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)#0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
+    Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)
     InteractionForce = -0.5 * (((u - uold) / dt) ** 2 + (ux) ** 2) + 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)
     fKineticenergy.extend([Kineticenergy])
     fPotentialenergy.extend([Potentialenergy])
     fStrainenergy.extend([Strainenergy])
-    #analytical                                       ######################old########################################################
+    #analytical
     Kineticenergyana = 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2
     Strainenergyana = 0.5 * (1/(numpy.cosh(-c * t + xx))**2)**2
     Potentialenergyana = 0.5 * ((numpy.tanh(xx - c * t)) ** 4 - 2 * (numpy.tanh(xx - c * t)) ** 2 + 1)
