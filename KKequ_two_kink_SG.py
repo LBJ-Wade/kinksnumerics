@@ -3,8 +3,6 @@ import numpy
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import scipy.integrate as integrate
-import time
-
 
 
 plt.ion()
@@ -14,10 +12,10 @@ Lx = 128.0  # Period 2*pi*Lx
 Nx = 16384  # Number of harmonics
 Nt = 10000  # Number of time slices
 tmax = 50.0  # Maximum time
-c = 0.1#0.1  # Wave speed
+c = 0.1# 0.1  # Wave speed
 gamma=1/numpy.sqrt(1-c**2)
-a = 3 #two kink seperation
-b = 0 #Point between two kinks
+a = 3 # two kink seperation
+b = 0 # Point between two kinks
 dt = (tmax+50) / Nt  # time step
 plotgap = 25  # time steps between plots
 numplots = Nt / plotgap  # number of plots to make
@@ -35,6 +33,7 @@ for i in xrange(Nx):
 
 dx = abs(xx[4096]-xx[4097])
 print(dx)
+
 # allocate arrays
 unew = numpy.zeros((Nx), dtype=float)
 u = numpy.zeros((Nx), dtype=float)
@@ -84,11 +83,11 @@ tdata = numpy.zeros((numplots), dtype=float)
 nonlin = numpy.zeros((Nx), dtype=float)
 nonlinhat = numpy.zeros((Nx), dtype=complex)
 
-t = -50.0
+t = -50.0 # t=0 is the piont of collision
 
-u = 4*numpy.arctan(-c*numpy.cosh(gamma*xx)/numpy.sinh(gamma*c*t)) #<- two kink  #numpy.tanh(xx-c*t) <-single kink
-uexact = 4*numpy.arctan(-c*numpy.cosh(gamma*xx)/numpy.sinh(gamma*c*t))  #<- two kink  #numpy.tanh(xx-c*t) <-single kink
-uold = 4*numpy.arctan(-c*numpy.cosh(gamma*xx)/numpy.sinh(gamma*c*(t-dt)))     #<- two kink  #numpy.tanh(xx-c*t) <-single kink
+u = 4*numpy.arctan(-c*numpy.cosh(gamma*xx)/numpy.sinh(gamma*c*t)) #<- two kink
+uexact = 4*numpy.arctan(-c*numpy.cosh(gamma*xx)/numpy.sinh(gamma*c*t))  #<- two kink
+uold = 4*numpy.arctan(-c*numpy.cosh(gamma*xx)/numpy.sinh(gamma*c*(t-dt)))     #<- two kink
 v = numpy.fft.fftn(u)
 vold = numpy.fft.fftn(uold)
 
@@ -114,11 +113,11 @@ vx = 0.5 * kxm * (v + vold)
 ux = numpy.real(numpy.fft.ifftn(vx))
 Kineticenergy = 0.5 * ((u - uold) / dt) ** 2
 Strainenergy = 0.5* (ux) ** 2
-Potentialenergy = 1-numpy.cos(u) #0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
-#InteractionForce = -0.5 * (((u - uold) / dt) ** 2 + (ux) ** 2) + 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)
+Potentialenergy = 1-numpy.cos(u)
 fKineticenergy = [Kineticenergy]
 fPotentialenergy = [Potentialenergy]
 fStrainenergy = [Strainenergy]
+
 #sum over an reasonable intervall
 Ekinsum = 0
 Epotsum = 0
@@ -140,7 +139,6 @@ EnPot[0] = Epotsum
 EnStr[0] = Estrsum
 En[0] = EnStr[0] + EnPot[0] + EnKin[0]
 
-#EnO = En[0]
 tdata[0] = t
 plotnum = 0
 
@@ -161,7 +159,7 @@ for i in range(len(xx)):
 R = abs(x1-x2)
 Fana[0] = 32 * numpy.exp(-2*2*a)
 
-#analytical                                           ######################old########################################################
+#analytical energy
 Kineticenergyana = 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2
 Strainenergyana = 0.5 * (1/(numpy.cosh(-c * t + xx))**2)**2
 Potentialenergyana = 0.5 * ((numpy.tanh(xx - c * t)) ** 4 - 2 * (numpy.tanh(xx - c * t)) ** 2 + 1)
@@ -175,30 +173,13 @@ EnStrana = [integrate.quad(lambda z: 0.5 * ((numpy.cosh(-c * t + z)) ** -2) ** 2
 EnPotana = [integrate.quad(lambda z: 0.5 * ((numpy.tanh(z - c * t)) ** 4 - 2 * (numpy.tanh(z - c * t)) ** 2 + 1), -numpy.inf, numpy.inf)[0]]
 Enana = [EnStrana[0] + EnPotana[0] + EnKinana[0]]
 
-"""fig = plt.figure()
-ax1 = fig.add_subplot(2, 1, 1)
-ax2 = fig.add_subplot(2, 1, 2)
-ax1.plot(xx, Potentialenergy, 'b-', label='$\phi$')
-ax1.plot(xx, 0.5 * ((numpy.tanh(xx - c * t)) ** 4 - 2 * (numpy.tanh(xx - c * t)) ** 2 + 1), 'r-', label='$\phi_e$')
-ax1.set_xlim(-10, 10)
-ax2.plot(xx, Kineticenergy, 'b-', label='$\phi$')
-ax2.plot(xx, 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2, 'r-', label='$\phi_e$')
-ax2.set_xlim(-10, 10)
-plt.ioff()
-plt.show()"""
 
-# plot each plot in a png
-#name = ["0.png"]
-#for i in range(numplots):
-#    name.extend([str(i+1)+".png"])
-#    print(name[i])
-ntt = 0
 v0part = []
 v0part.append(0)
 
-#
+
 us = [u]
-uex = [uexact] #here the exact solution if we apply the force
+uex = [uexact]
 uerror = [abs((u - uexact)/uexact)*1000]
 for i in range(len(uerror[0])):
     if abs(uexact[i]) < 10**-7:
@@ -219,13 +200,8 @@ for nt in xrange(numplots - 1):
     plotnum += 1
 
     deltat = t - tdata[plotnum - 1]
-    #v0 = 0
-    #for i in range(len(v0part)):
-    #    v0 = v0 + v0part[i]
-    #a = 0.5 * (2 * a - 2 * v0 * deltat - 2 * 0.5 * Fana[plotnum] * deltat ** 2)
-    #gamma = 1 / numpy.sqrt(1 - v0 ** 2)
     uexact = 4 * numpy.arctan(-c * numpy.cosh(gamma * xx) / numpy.sinh(gamma * c * t))
-    # analytical interaction force
+    # analytical interaction force (discretized)
     x1 = 0
     x2 = 0
     uj1 = 1
@@ -241,30 +217,10 @@ for nt in xrange(numplots - 1):
 
     Fana[plotnum] = 32*numpy.exp(-2*R)
 
-    """ax = fig.add_subplot(211)
-    plt.cla()
-    ax.plot(xx, u, 'b-', label='$\phi$')
-    ax.plot(xx, uexact, 'r-', label='$\phi_{exact}$')
-    #plt.xlim(-10, 10)
-    plt.ylim(-1.5, 3.0)
-    plt.title('time t=' + str(t))
-    plt.xlabel('x')
-    plt.ylabel('$\phi$, $\phi_{exact}$')
-    plt.legend()
-    ax = fig.add_subplot(212)
-    plt.cla()
-    ax.plot(xx, abs(u - uexact), 'b-')#ax.plot(xx, uexact, 'b-')
-    plt.xlim(-10, 10)
-    plt.ylim(-0.5, 0.5)
-    plt.xlabel('x')
-    plt.ylabel('error')
-    plt.draw()"""
-    #plt.savefig(str(name[ntt]))############## for png saving
     us.extend([u])
     uex.extend([uexact])
 
     uerror.extend([abs((u - uexact)/uexact)*1000])
-    ntt += 1
     for i in range(len(uerror[plotnum])):
         if abs(uerror[plotnum][i]) > 10**5:
             uerror[plotnum][i] = uexact[i]
@@ -273,12 +229,12 @@ for nt in xrange(numplots - 1):
     ux = numpy.real(numpy.fft.ifftn(vx))
     Kineticenergy = 0.5 * ((u-uold) / dt) ** 2
     Strainenergy = 0.5 * (ux) ** 2
-    Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)#0.5 * (0.5 * (u + uold)) ** 2 - Es * 0.25 * (0.5 * (u + uold)) ** 4
+    Potentialenergy = 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)
     InteractionForce = -0.5 * (((u - uold) / dt) ** 2 + (ux) ** 2) + 0.5*((0.5*(u+uold))**4-2*(0.5*(u+uold))**2+1)
     fKineticenergy.extend([Kineticenergy])
     fPotentialenergy.extend([Potentialenergy])
     fStrainenergy.extend([Strainenergy])
-    #analytical                                       ######################old########################################################
+    #analytical
     Kineticenergyana = 0.5 * (-c * 1 / (numpy.cosh(c * t - xx)) ** 2) ** 2
     Strainenergyana = 0.5 * (1/(numpy.cosh(-c * t + xx))**2)**2
     Potentialenergyana = 0.5 * ((numpy.tanh(xx - c * t)) ** 4 - 2 * (numpy.tanh(xx - c * t)) ** 2 + 1)
@@ -292,19 +248,6 @@ for nt in xrange(numplots - 1):
     EnPotana.extend([integrate.quad(lambda x: 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -numpy.inf, numpy.inf)[0]])
     Enana.extend([integrate.quad(lambda x: 0.5 * (-c * 1/(numpy.cosh(c * t - x))**2)**2 + 0.5 * (1/(numpy.cosh(-c * t + x))**2)**2 + 0.5*((numpy.tanh(x-c*t))**4-2*(numpy.tanh(x-c*t))**2+1), -numpy.inf, numpy.inf)[0]])
 
-    """ax = fig.add_subplot(212)
-    plt.cla()
-    ax.plot(xx, Kineticenergy, 'b-')  # ax.plot(xx, uexact, 'b-')
-    ax.plot(xx, Kineticenergyana, 'r-')
-    plt.xlim(-10, 10)
-    plt.ylim(0, 0.02)
-    plt.xlabel('x')
-    plt.ylabel('Epot')
-    plt.draw()"""
-
-    #Kineticenergy = numpy.fft.fftn(Kineticenergy)
-    #Strainenergy = numpy.fft.fftn(Strainenergy)
-    #Potentialenergy = numpy.fft.fftn(Potentialenergy)
     Ekinsum = 0
     Epotsum = 0
     Estrsum = 0
@@ -321,12 +264,10 @@ for nt in xrange(numplots - 1):
             IntFsum = InteractionForce[i]
 
     F[plotnum] = IntFsum
-    EnKin[plotnum] = Ekinsum #numpy.real(Kineticenergy[0])
-    EnPot[plotnum] = Epotsum #numpy.real(Potentialenergy[0])
-    EnStr[plotnum] = Estrsum #numpy.real(Strainenergy[0])
+    EnKin[plotnum] = Ekinsum
+    EnPot[plotnum] = Epotsum
+    EnStr[plotnum] = Estrsum
     En[plotnum] = EnStr[plotnum] + EnPot[plotnum] + EnKin[plotnum]
-    #Enchange[plotnum - 1] = numpy.log(abs(1 - En[plotnum] / EnO))
-      # <- two kink  #numpy.tanh(xx-c*t) <-single kink
 
     tdata[plotnum] = t
     v0part.append( Fana[plotnum] * deltat)
@@ -418,7 +359,7 @@ ax2.set_ylim(0, 1)
 ax2.set_xlim(-20, 20)
 plt.xlabel('x')
 plt.ylabel('$|\\frac{\phi_{simulated}-\phi_{exact}}{\phi_{exact}}|\,\,\,\,\,[10^{-2}]$')
-#plt.hlines(0.05,-20,20,colors='black',linestyles='--')
+
 
 
 def update(i):
@@ -438,56 +379,3 @@ plt.show()
 #ani.save('two_kink_sine_gordon.gif', writer='D_M')
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# animation of the exact solution #old
-"""
-fig = plt.figure()
-ax = plt.axes(xlim=(-10, 10), ylim=(-2, 3))
-line, = ax.plot([], [], lw=2)
-
-def init():
-    line.set_data([], [])
-    return line,
-
-def animate(i):
-    x = numpy.linspace(-10, 10, 1000)
-    y = -numpy.tanh(x-c*i+5) + numpy.tanh(x+c*i-5) + 1
-    line.set_data(x, y)
-    return line,
-
-anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=200, interval=100, blit=True)
-
-plt.show()
-"""
-
-
-#old stuff
-"""
-plt.figure()
-plt.plot(tdata, En, 'r+', tdata, EnKin, 'b:', tdata, EnPot, 'g-.', tdata, EnStr, 'y--')
-plt.xlabel('Time')
-plt.ylabel('Energy')
-plt.legend(('Total', 'Kinetic', 'Potential', 'Strain'))
-plt.title('Time Dependence of Energy Components')
-plt.show()
-
-plt.figure()
-plt.plot(Enchange, 'r-')
-plt.title('Time Dependence of Change in Total Energy')
-plt.show()
-"""
