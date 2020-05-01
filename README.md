@@ -33,3 +33,4 @@ Remark: The interaction force is calculated in KKequ_two_kink.py and correspondi
 
 Remark: In some plots there is an error calculated as a normalized difference between what is called $\phi_simulated$ and $\phi_exact$. Note that $\phi_exact$ is actually just the analytical solution or an approxiamtion based on asymptotic behavior (no numerics involved) of the corresponding problem. In the case of kink-antikink interaction in the $\phi^4$-theory e.g. there is no analytic solution describing the scattering, therefore, we derive an asymptotic analytic solution based on the interaction force (see ...pdf). This is, however, still labeled as $\phi_exact$.
 
+Remark: The programms are also able to calculate the simulated energy densities of kinetic, potential and strain energy of dynamical kink solutions. Simply enabling the corresponding animation-execution line in Kkequ_Kink_commented.py will visualize these quantities.
