@@ -1,19 +1,20 @@
 # kinksnumerics
-numerical simulation of kink solution
+# NUMERICAL SIMULATION OF KINK SOLITONS
 
-In this repository there are several programs shown that simulate numerically dynamic kink solutions of the phi^4-theory and the Sine-Gordon model, however, an arbitrary potential for a real 1 dimensional scalar can be introduced (Further details below) and numerically simulated.
-For simplicity, every model has its own python file. We even split one and mulit-kink solution for the phi^4-model into separate files which would not be necessary. 
-The files Kkequ_Kink_commented.py and  Kkequ_two_Kink.py simulate the phi^4-theory, Kkequ_two_kink.py the Sine-Gordon model.
+In this repository there are several programs shown that simulate numerically dynamic kink solutions of the phi^4-theory and the Sine-Gordon model. However, an arbitrary potential for a real 1-dimensional scalar can be introduced (further details below) and numerically simulated.
+For simplicity, every model has its own Python file. We also split one and mulit-kink solution for the phi^4-model into separate files.
+The files Kkequ_Kink_commented.py and Kkequ_two_Kink.py simulate the phi^4-theory, Kkequ_two_kink.py the Sine-Gordon model.
 
-The plots that are included in this repository are labeled such that there is no need of further explanation of what they show. They are all produced by the python files in this repository. IMPORTANT: We always split simulation and analytical result over each other. Simulations in the gif-files are ALWAYS printed red while the analytical solution is printed blue!
+The plots that are included in this repository are labeled such that there is no need of further explanation of what they show. They are all produced by the Python files in this repository.
+IMPORTANT: We always split simulation and analytical result over each other. Simulations in the gif-files are ALWAYS printed red while the analytical solutions are printed blue!
 Note however that some plots for static solutions or potentials (since they are trivial analytic functions) are simply done by a simple plot script which is not included in this repository.
 
-The Program Structure: 
+# Concerning the structure of the programs
 We use in implicit-explicit time scheme stepping  applying a degree-three-discretization which follows closely the description of 
 https://en.wikibooks.org/wiki/Parallel_Spectral_Numerical_Methods/The_Klein-Gordon_Equation.
-Note however, that the equations of motions have to be adapted depending on the potential. For theoretical explanations of how the program works as well as specific instructions on how to modify it please read report_kink.pdf of this repository. A short summary is given in the following:
+Note however, that the equations of motions have to be adapted depending on the potential. For theoretical explanations of how the program works as well as specific instructions on how to modify it please read report_kink.pdf. A short summary is given in the following:
 
-The program Kkequ_Kink_commented.py is sufficiently commented and can be downloaded and modified as one wish. The other programs include specific calculations for the problems of phi^4 and Sine-Gordon and can be ignored further. Following the Steps in the comments of  Kkequ_Kink_commented.py: 
+The program Kkequ_Kink_commented.py is sufficiently commented and can be downloaded and modified as one wish. The other programs include specific calculations for the problems of phi^4 and Sine-Gordon and can be ignored further. Following the steps can be found in the comments of Kkequ_Kink_commented.py. Please open it and follow the steps in parallel: 
 
 Step 0: Here, we define intervals in which space and time should be discretized as well as the maximal simulation time and the initial velocity of the kink solution. These can be adapted as it suits.
 
@@ -26,6 +27,8 @@ After step 2 there are a lot of lines dedicated to the analytic calculation of t
 Step 3: In the loops that run the time evolution one can find step 3 where the Fourier transformed equation of motion has to be entered solved for the Fourier transform of the field at the next time step. A more elaborated description will be found in ….pdf. 
 
 Step 4: Once again the exact solution has to be entered.
+
+# Remarks to this repository:
 
 After this step the simulation is good to go. The animation segments that follow have to be adapted for individual purposes. Note however that the time evolution of the functions is saved in the arrays defined in line 142-148. Since they are distinctly different from the time evolution arrays for the energies defined in line 127-139 different animation procedures are defined. They, too, can be adapted as one wish.
 
